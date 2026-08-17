@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Crie e organize suas fichas de treino." />
+    <title>GymFlow — Minhas fichas</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="topo">
+      <div>
+        <p class="saudacao">Bem-vindo de volta</p>
+        <h1>Suas fichas</h1>
+      </div>
+      <button class="botao-perfil" type="button" aria-label="Abrir perfil">
+        👤
+      </button>
+    </header>
+
+    <main>
+      <search class="busca">
+        <label class="sr-only" for="buscar-treino">Buscar treino</label>
+        <input
+          id="buscar-treino"
+          type="search"
+          placeholder="Buscar treino"
+          autocomplete="off"
+        />
+      </search>
+
+      <section class="treinos" aria-labelledby="titulo-treinos">
+        <header class="cabecalho-secao">
+          <h2 id="titulo-treinos">Meus treinos</h2>
+          <span id="quantidade-fichas">Nenhuma ficha</span>
+        </header>
+
+        <ul class="lista-treinos" id="lista-treinos"></ul>
+      </section>
+    </main>
+
+    <footer class="acoes">
+      <div class="acoes-secundarias">
+        <button id="importar-backup" class="botao-secundario" type="button">
+          Importar backup
+        </button>
+        <button id="exportar-backup" class="botao-secundario" type="button">
+          Exportar backup
+        </button>
+        <input
+          id="arquivo-backup"
+          type="file"
+          accept="application/json,.json"
+          hidden
+        />
+      </div>
+      <button id="criar-treino" class="botao-primario" type="button">
+        + Criar novo treino
+      </button>
+    </footer>
+
+    <dialog id="modal-confirmacao" class="modal-confirmacao">
+      <form method="dialog" class="form-confirmacao">
+        <div class="cabecalho-modal">
+          <div>
+            <p class="saudacao">Confirmação</p>
+            <h2 id="titulo-confirmacao">Confirmar ação</h2>
+          </div>
+          <button
+            id="fechar-confirmacao"
+            class="botao-fechar"
+            type="button"
+            aria-label="Fechar"
+          >
+            ×
+          </button>
+        </div>
+
+        <p id="mensagem-confirmacao" class="mensagem-confirmacao"></p>
+
+        <div class="acoes-confirmacao">
+          <button
+            id="cancelar-confirmacao"
+            class="botao-secundario"
+            type="button"
+          >
+            Cancelar
+          </button>
+
+          <button
+            id="confirmar-acao"
+            class="botao-confirmar"
+            type="button"
+          >
+            Confirmar
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog
+      id="modal-novo-treino"
+      class="modal-treino"
+      aria-labelledby="titulo-modal"
+    >
+      <form id="form-novo-treino" class="form-treino">
+        <div class="cabecalho-modal">
+          <div>
+            <p class="saudacao">Nova ficha</p>
+            <h2 id="titulo-modal">Criar treino</h2>
+          </div>
+          <button
+            id="cancelar-novo-treino"
+            class="botao-fechar"
+            type="button"
+            aria-label="Fechar"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="campo">
+          <label for="nome-treino">Nome do treino</label>
+          <input
+            id="nome-treino"
+            name="nome"
+            type="text"
+            placeholder="Ex.: Treino A"
+            maxlength="50"
+            required
+          />
+        </div>
+
+        <div class="campo">
+          <label for="grupo-ficha">Grupos musculares</label>
+          <div class="linha-adicionar-grupo">
+            <select id="grupo-ficha">
+              <option value="">Escolha um grupo muscular</option>
+            </select>
+            <button
+              id="adicionar-grupo-ficha"
+              class="botao-adicionar-grupo"
+              type="button"
+            >
+              Adicionar
+            </button>
+          </div>
+          <div
+            id="lista-grupos-ficha"
+            class="lista-grupos-ficha"
+            aria-live="polite"
+          ></div>
+        </div>
+
+        <div class="campo">
+          <label for="grupo-personalizado-ficha">Grupo personalizado</label>
+          <div class="linha-adicionar-grupo">
+            <input
+              id="grupo-personalizado-ficha"
+              type="text"
+              placeholder="Ex.: Mobilidade"
+              maxlength="50"
+            />
+            <button
+              id="adicionar-grupo-personalizado"
+              class="botao-adicionar-grupo"
+              type="button"
+            >
+              Adicionar
+            </button>
+          </div>
+        </div>
+
+        <p class="aviso-formulario">
+          Você poderá adicionar os exercícios na próxima tela.
+        </p>
+        <button
+          id="excluir-ficha-modal"
+          class="botao-excluir-ficha"
+          type="button"
+          hidden
+        >
+          Excluir ficha
+        </button>
+        <button class="botao-primario" type="submit">Criar ficha</button>
+      </form>
+    </dialog>
+
+    <div
+      id="aviso-app"
+      class="aviso-app"
+      role="status"
+      aria-live="polite"
+      hidden
+    ></div>
+
+    <dialog
+      id="modal-adicionar-exercicio"
+      class="modal-treino"
+      aria-labelledby="titulo-modal-exercicio"
+    >
+      <form id="form-adicionar-exercicio" class="form-treino">
+        <div class="cabecalho-modal">
+          <div>
+            <p class="saudacao">Montar ficha</p>
+            <h2 id="titulo-modal-exercicio">Adicionar exercício</h2>
+          </div>
+          <button
+            id="cancelar-exercicio"
+            class="botao-fechar"
+            type="button"
+            aria-label="Fechar"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="filtros-exercicios">
+          <div class="campo">
+            <label for="filtro-regiao">Região corporal</label>
+            <select id="filtro-regiao">
+              <option value="">Todas as regiões</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="filtro-grupo">Grupo muscular</label>
+            <select id="filtro-grupo" disabled>
+              <option value="">Todos os grupos</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="filtro-foco">Foco muscular</label>
+            <select id="filtro-foco" disabled>
+              <option value="">Todos os focos</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="buscar-exercicio">Buscar pelo nome</label>
+            <input
+              id="buscar-exercicio"
+              type="search"
+              placeholder="Ex.: supino, agachamento..."
+              autocomplete="off"
+            />
+          </div>
+        </div>
+
+        <div class="resultados-exercicios">
+          <h3>Exercícios encontrados</h3>
+          <div
+            id="lista-opcoes-exercicios"
+            class="lista-opcoes-exercicios"
+          ></div>
+        </div>
+
+        <button
+          id="usar-exercicio-personalizado"
+          class="botao-secundario"
+          type="button"
+        >
+          + Criar exercício personalizado
+        </button>
+
+        <div id="campo-exercicio-personalizado" class="campo" hidden>
+          <label for="nome-exercicio-personalizado"
+            >Nome do exercício personalizado</label
+          >
+          <input
+            id="nome-exercicio-personalizado"
+            type="text"
+            placeholder="Ex.: Rosca no aparelho da academia"
+            maxlength="80"
+          />
+        </div>
+
+        <section
+          id="configuracao-exercicio"
+          class="configuracao-exercicio"
+          hidden
+          aria-labelledby="titulo-configuracao"
+        >
+          <p id="exercicio-selecionado" class="exercicio-selecionado"></p>
+          <h3 id="titulo-configuracao">Configuração</h3>
+
+          <div class="grade-campo">
+            <div class="campo">
+              <label for="series-exercicio">Séries</label>
+              <input
+                id="series-exercicio"
+                type="number"
+                min="1"
+                max="99"
+                value="3"
+                required
+              />
+            </div>
+            <div class="campo">
+              <label for="repeticoes-exercicio">Repetições</label>
+              <input
+                id="repeticoes-exercicio"
+                type="number"
+                min="1"
+                max="999"
+                value="10"
+                required
+              />
+            </div>
+            <div class="campo">
+              <label for="carga-exercicio">Carga (kg)</label>
+              <input
+                id="carga-exercicio"
+                type="number"
+                min="0"
+                step="0.5"
+                placeholder="Opcional"
+              />
+            </div>
+            <div class="campo">
+              <label for="descanso-exercicio">Descanso (s)</label>
+              <input id="descanso-exercicio" type="number" min="0" value="60" />
+            </div>
+          </div>
+        </section>
+
+        <button
+          id="salvar-exercicio"
+          class="botao-primario"
+          type="submit"
+          disabled
+        >
+          Adicionar à ficha
+        </button>
+      </form>
+    </dialog>
+
+    <script src="exercicios.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
