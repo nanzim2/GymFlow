@@ -605,3 +605,111 @@ button:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================
+   MODAL EM BREVE
+   ========================= */
+
+.modal-em-breve {
+  width: min(calc(100% - 32px), 420px);
+  margin: auto;
+  padding: 0;
+
+  border: 1px solid var(--borda);
+  border-radius: 24px;
+
+  background: var(--fundo-secundario);
+  color: var(--texto);
+
+  box-shadow: var(--sombra);
+}
+
+.modal-em-breve::backdrop {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(3px);
+}
+
+.conteudo-em-breve {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding: 32px;
+
+  text-align: center;
+}
+
+.icone-em-breve {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  place-items: center;
+
+  margin-bottom: 18px;
+
+  border-radius: 50%;
+  background: #313c31;
+
+  font-size: 30px;
+}
+
+.conteudo-em-breve h2 {
+  margin-bottom: 10px;
+
+  font-size: 1.5rem;
+}
+
+.conteudo-em-breve p {
+  max-width: 340px;
+  margin-bottom: 24px;
+
+  color: var(--texto-secundario);
+  line-height: 1.5;
+}
+
+#fechar-em-breve {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+
+  width: 38px;
+  height: 38px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  border: 1px solid var(--borda);
+  border-radius: 50%;
+
+  background: var(--card);
+  color: var(--texto);
+
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+#fechar-em-breve:hover {
+  background: var(--card-hover);
+  color: var(--verde);
+}
+
+#entendi-em-breve {
+  width: 100%;
+  min-height: 48px;
+
+  border: none;
+  border-radius: 14px;
+
+  background: var(--verde);
+  color: #132014;
+
+  font-weight: 800;
+}
+
+#entendi-em-breve:hover {
+  filter: brightness(1.08);
+}

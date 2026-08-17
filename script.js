@@ -1035,3 +1035,25 @@ window.GymFlow = {
   salvarTreinos,
   renderizarTreinos,
 };
+
+const botaoPerfil = document.querySelector("#botao-perfil");
+const modalEmBreve = document.querySelector("#modal-em-breve");
+const fecharEmBreve = document.querySelector("#fechar-em-breve");
+const entendiEmBreve = document.querySelector("#entendi-em-breve");
+
+botaoPerfil?.addEventListener("click", () => {
+  modalEmBreve?.showModal();
+});
+
+fecharEmBreve?.addEventListener("click", () => {
+  modalEmBreve?.close();
+});
+
+entendiEmBreve?.addEventListener("click", () => {
+  modalEmBreve?.close();
+});
+modalEmBreve?.addEventListener("click", (event) => {
+  if (event.target === modalEmBreve) {
+    modalEmBreve.close();
+  }
+});
