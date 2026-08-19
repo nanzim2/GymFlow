@@ -26,6 +26,20 @@
   display: none !important;
 }
 
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-app {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(183, 245, 49, 0.18);
+  flex-shrink: 0;
+}
+
 body {
   min-height: 100dvh;
   display: grid;
