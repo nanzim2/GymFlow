@@ -1,8 +1,86 @@
-const CATALOGO_EXERCICIOS = [
-  // =========================
-  // PEITO
-  // =========================
+const ESTRUTURA_MUSCULAR = [
+  {
+    id: "superiores",
+    nome: "Membros Superiores",
+    grupos: [
+      {
+        id: "peito",
+        nome: "Peitoral",
+        focos: [
+          "Porção clavicular (superior)",
+          "Porção esternocostal (média)",
+          "Porção abdominal (inferior)",
+        ],
+      },
+      {
+        id: "costas",
+        nome: "Costas",
+        focos: [
+          "Latíssimo do dorso",
+          "Romboides e redondos",
+          "Trapézio superior",
+          "Eretores da espinha",
+        ],
+      },
+      {
+        id: "ombros",
+        nome: "Ombros",
+        focos: ["Deltoide anterior", "Deltoide lateral", "Deltoide posterior"],
+      },
+      {
+        id: "bracos",
+        nome: "Braços (Bíceps e Tríceps)",
+        focos: [
+          "Bíceps braquial - cabeça longa",
+          "Bíceps braquial - cabeça curta",
+          "Braquial",
+          "Tríceps braquial - cabeça lateral",
+          "Tríceps braquial - cabeça longa",
+          "Tríceps braquial - cabeça medial",
+        ],
+      },
+      {
+        id: "antebraco",
+        nome: "Antebraço",
+        focos: ["Flexores do punho", "Extensores do punho"],
+      },
+    ],
+  },
+  {
+    id: "inferiores-tronco",
+    nome: "Membros Inferiores e Core",
+    grupos: [
+      {
+        id: "quadriceps",
+        nome: "Quadríceps",
+        focos: ["Vasto lateral", "Vasto medial", "Reto femoral"],
+      },
+      {
+        id: "posteriores",
+        nome: "Posteriores de Coxa",
+        focos: ["Bíceps femoral", "Semitendíneo", "Semimembranáceo"],
+      },
+      {
+        id: "gluteos",
+        nome: "Glúteos",
+        focos: ["Glúteo máximo", "Glúteo médio e mínimo"],
+      },
+      {
+        id: "panturrilhas",
+        nome: "Panturrilhas",
+        focos: ["Gastrocnêmio", "Sóleo"],
+      },
+      {
+        id: "core",
+        nome: "Abdômen e Core",
+        focos: ["Reto abdominal", "Oblíquos", "Transverso do abdômen"],
+      },
+    ],
+  },
+];
 
+const CATALOGO_EXERCICIOS = [
+  // PEITO
   {
     id: "supino-reto-barra",
     nome: "Supino reto com barra",
@@ -95,10 +173,7 @@ const CATALOGO_EXERCICIOS = [
     foco: "Porção esternocostal (média)",
   },
 
-  // =========================
   // COSTAS
-  // =========================
-
   {
     id: "puxada-frontal",
     nome: "Puxada frontal",
@@ -205,10 +280,7 @@ const CATALOGO_EXERCICIOS = [
     foco: "Eretores da espinha",
   },
 
-  // =========================
   // OMBROS
-  // =========================
-
   {
     id: "desenvolvimento-halteres",
     nome: "Desenvolvimento com halteres",
@@ -301,10 +373,7 @@ const CATALOGO_EXERCICIOS = [
     foco: "Deltoide lateral",
   },
 
-  // =========================
-  // BÍCEPS E TRÍCEPS
-  // =========================
-
+  // BRAÇOS
   {
     id: "rosca-direta",
     nome: "Rosca direta",
@@ -432,10 +501,7 @@ const CATALOGO_EXERCICIOS = [
     foco: "Tríceps braquial - cabeça lateral",
   },
 
-  // =========================
   // ANTEBRAÇO
-  // =========================
-
   {
     id: "flexao-punho",
     nome: "Flexão de punho",
@@ -458,10 +524,7 @@ const CATALOGO_EXERCICIOS = [
     foco: "Extensores do punho",
   },
 
-  // =========================
   // QUADRÍCEPS
-  // =========================
-
   {
     id: "agachamento-livre",
     nome: "Agachamento livre",
@@ -526,10 +589,7 @@ const CATALOGO_EXERCICIOS = [
     foco: "Reto femoral",
   },
 
-  // =========================
   // POSTERIORES DE COXA
-  // =========================
-
   {
     id: "stiff",
     nome: "Stiff",
@@ -580,10 +640,7 @@ const CATALOGO_EXERCICIOS = [
     foco: "Bíceps femoral",
   },
 
-  // =========================
   // GLÚTEOS
-  // =========================
-
   {
     id: "elevacao-pelvica",
     nome: "Elevação pélvica",
@@ -627,10 +684,7 @@ const CATALOGO_EXERCICIOS = [
     foco: "Glúteo máximo",
   },
 
-  // =========================
   // PANTURRILHAS
-  // =========================
-
   {
     id: "panturrilha-em-pe",
     nome: "Panturrilha em pé",
@@ -660,10 +714,7 @@ const CATALOGO_EXERCICIOS = [
     foco: "Gastrocnêmio",
   },
 
-  // =========================
   // CORE
-  // =========================
-
   {
     id: "abdominal-crunch",
     nome: "Abdominal crunch",

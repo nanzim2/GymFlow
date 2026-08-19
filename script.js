@@ -397,7 +397,10 @@ function abrirModalEditarTreino(idTreino) {
 
 function preencherGruposFicha() {
   const seletor = document.querySelector("#grupo-ficha");
+  if (!seletor) return;
   seletor.replaceChildren(criarOpcao("", "Escolha um grupo muscular"));
+
+  if (!Array.isArray(window.ESTRUTURA_MUSCULAR)) return;
 
   window.ESTRUTURA_MUSCULAR.forEach((regiao) => {
     regiao.grupos.forEach((grupo) => {
@@ -418,6 +421,7 @@ function adicionarGrupoFicha(grupo) {
 
 function renderizarGruposFicha() {
   const lista = document.querySelector("#lista-grupos-ficha");
+  if (!lista) return;
   lista.replaceChildren();
 
   gruposFichaEmEdicao.forEach((grupo) => {
@@ -572,15 +576,15 @@ function configurarFormularioNovoTreino() {
 
   botaoCriar?.addEventListener("click", abrirModalNovoTreino);
   botaoCancelar?.addEventListener("click", fecharModalNovoTreino);
-  botaoAdicionarGrupo.addEventListener("click", () => {
+  botaoAdicionarGrupo?.addEventListener("click", () => {
     adicionarGrupoFicha(seletorGrupo.value);
     seletorGrupo.value = "";
   });
-  botaoAdicionarPersonalizado.addEventListener("click", () => {
+  botaoAdicionarPersonalizado?.addEventListener("click", () => {
     adicionarGrupoFicha(campoGrupoPersonalizado.value);
     campoGrupoPersonalizado.value = "";
   });
-  botaoExcluirFicha.addEventListener("click", () => {
+  botaoExcluirFicha?.addEventListener("click", () => {
     if (!idTreinoSendoEditado) {
       return;
     }
@@ -649,7 +653,10 @@ function limparSelecaoExercicio() {
 
 function preencherRegioes() {
   const filtroRegiao = document.querySelector("#filtro-regiao");
+  if (!filtroRegiao) return;
   filtroRegiao.replaceChildren(criarOpcao("", "Todas as regiões"));
+
+  if (!Array.isArray(window.ESTRUTURA_MUSCULAR)) return;
 
   window.ESTRUTURA_MUSCULAR.forEach((regiao) => {
     filtroRegiao.append(criarOpcao(regiao.id, regiao.nome));
@@ -660,6 +667,9 @@ function preencherGrupos() {
   const filtroRegiao = document.querySelector("#filtro-regiao");
   const filtroGrupo = document.querySelector("#filtro-grupo");
   const filtroFoco = document.querySelector("#filtro-foco");
+  
+  if (!Array.isArray(window.ESTRUTURA_MUSCULAR)) return;
+
   const regiao = window.ESTRUTURA_MUSCULAR.find(
     ({ id }) => id === filtroRegiao.value,
   );
@@ -678,6 +688,9 @@ function preencherFocos() {
   const filtroRegiao = document.querySelector("#filtro-regiao");
   const filtroGrupo = document.querySelector("#filtro-grupo");
   const filtroFoco = document.querySelector("#filtro-foco");
+
+  if (!Array.isArray(window.ESTRUTURA_MUSCULAR)) return;
+
   const regiao = window.ESTRUTURA_MUSCULAR.find(
     ({ id }) => id === filtroRegiao.value,
   );
@@ -699,6 +712,8 @@ function obterExerciciosFiltrados() {
     .querySelector("#buscar-exercicio")
     .value.trim()
     .toLocaleLowerCase("pt-BR");
+
+  if (!Array.isArray(window.CATALOGO_EXERCICIOS)) return [];
 
   return window.CATALOGO_EXERCICIOS.filter(
     (exercicio) =>
@@ -792,7 +807,7 @@ function abrirModalEditarExercicio(idTreino, idExercicio) {
       personalizado: true,
     };
   } else {
-    exercicioSelecionado = window.CATALOGO_EXERCICIOS.find(
+    exercicioSelecionado = (window.CATALOGO_EXERCICIOS || []).find(
       ({ id }) => id === exercicio.catalogoId,
     ) || {
       id: exercicio.catalogoId || exercicio.id,
@@ -834,36 +849,36 @@ function configurarModalExercicio() {
   const cancelar = document.querySelector("#cancelar-exercicio");
   const formulario = document.querySelector("#form-adicionar-exercicio");
 
-  filtroRegiao.addEventListener("change", () => {
+  filtroRegiao?.addEventListener("change", () => {
     preencherGrupos();
     limparSelecaoExercicio();
     renderizarOpcoesExercicios();
   });
 
-  filtroGrupo.addEventListener("change", () => {
+  filtroGrupo?.addEventListener("change", () => {
     preencherFocos();
     limparSelecaoExercicio();
     renderizarOpcoesExercicios();
   });
 
-  filtroFoco.addEventListener("change", () => {
+  filtroFoco?.addEventListener("change", () => {
     limparSelecaoExercicio();
     renderizarOpcoesExercicios();
   });
 
-  busca.addEventListener("input", () => {
+  busca?.addEventListener("input", () => {
     limparSelecaoExercicio();
     renderizarOpcoesExercicios();
   });
 
-  botaoPersonalizado.addEventListener("click", () => {
+  botaoPersonalizado?.addEventListener("click", () => {
     campoPersonalizado.hidden = !campoPersonalizado.hidden;
     if (!campoPersonalizado.hidden) {
       nomePersonalizado.focus();
     }
   });
 
-  nomePersonalizado.addEventListener("input", () => {
+  nomePersonalizado?.addEventListener("input", () => {
     const nome = nomePersonalizado.value.trim();
     if (!nome) {
       limparSelecaoExercicio();
@@ -873,9 +888,9 @@ function configurarModalExercicio() {
     selecionarExercicio({ id: "personalizado", nome, personalizado: true });
   });
 
-  cancelar.addEventListener("click", fecharModalAdicionarExercicio);
+  cancelar?.addEventListener("click", fecharModalAdicionarExercicio);
 
-  formulario.addEventListener("submit", (evento) => {
+  formulario?.addEventListener("submit", (evento) => {
     evento.preventDefault();
 
     if (!idTreinoEmEdicao || !exercicioSelecionado) {
@@ -1009,13 +1024,13 @@ function configurarBuscaEBackups() {
   const botaoImportar = document.querySelector("#importar-backup");
   const arquivoBackup = document.querySelector("#arquivo-backup");
 
-  busca.addEventListener("input", () => {
+  busca?.addEventListener("input", () => {
     termoBuscaTreinos = busca.value;
     renderizarTreinos();
   });
-  botaoExportar.addEventListener("click", exportarBackup);
-  botaoImportar.addEventListener("click", () => arquivoBackup.click());
-  arquivoBackup.addEventListener("change", async () => {
+  botaoExportar?.addEventListener("click", exportarBackup);
+  botaoImportar?.addEventListener("click", () => arquivoBackup?.click());
+  arquivoBackup?.addEventListener("change", async () => {
     await importarBackup(arquivoBackup.files[0]);
     arquivoBackup.value = "";
   });
@@ -1028,7 +1043,6 @@ document.addEventListener("DOMContentLoaded", () => {
   configurarBuscaEBackups();
 });
 
-// Funções que serão reutilizadas quando criarmos a tela de novo treino.
 window.GymFlow = {
   chaveTreinos: CHAVE_TREINOS,
   obterTreinos,
@@ -1052,6 +1066,7 @@ fecharEmBreve?.addEventListener("click", () => {
 entendiEmBreve?.addEventListener("click", () => {
   modalEmBreve?.close();
 });
+
 modalEmBreve?.addEventListener("click", (event) => {
   if (event.target === modalEmBreve) {
     modalEmBreve.close();
