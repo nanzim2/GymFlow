@@ -1,4 +1,17 @@
 const CHAVE_TREINOS = "gymflow:treinos";
+const GRUPOS_SUGERIDOS = [
+  "Peito",
+  "Costas",
+  "Ombros",
+  "Bíceps",
+  "Tríceps",
+  "Quadríceps",
+  "Posteriores",
+  "Glúteos",
+  "Panturrilhas",
+  "Core",
+];
+
 let idTreinoEmEdicao = null;
 let exercicioSelecionado = null;
 let idTreinoSendoEditado = null;
@@ -9,18 +22,22 @@ let backupTreinoAntesEdicao = null;
 let termoBuscaTreinos = "";
 let temporizadorAviso;
 
+function vibrar(ms = 25) {
+  if ("vibrate" in navigator) {
+    try {
+      navigator.vibrate(ms);
+    } catch {}
+  }
+}
+
 function obterTreinos() {
   const dadosSalvos = localStorage.getItem(CHAVE_TREINOS);
-
-  if (!dadosSalvos) {
-    return [];
-  }
-
+  if (!dadosSalvos) return [];
   try {
     const treinos = JSON.parse(dadosSalvos);
     return Array.isArray(treinos) ? treinos : [];
   } catch {
-    console.warn("Não foi possível ler os treinos salvos neste dispositivo.");
+    console.warn("Não foi possível ler os treinos salvos.");
     return [];
   }
 }
@@ -34,14 +51,12 @@ function mostrarAviso(mensagem) {
   if (!aviso) return;
 
   clearTimeout(temporizadorAviso);
-
   aviso.classList.remove("saindo");
   aviso.textContent = mensagem;
   aviso.hidden = false;
 
   temporizadorAviso = setTimeout(() => {
     aviso.classList.add("saindo");
-
     setTimeout(() => {
       aviso.hidden = true;
       aviso.classList.remove("saindo");
@@ -74,6 +89,7 @@ function mostrarConfirmacao({
     botaoCancelar.textContent = textoCancelar;
 
     const finalizar = (resultado) => {
+      vibrar(20);
       modal.close();
       resolve(resultado);
     };
@@ -87,25 +103,17 @@ function mostrarConfirmacao({
 }
 
 function gerarIdTreino() {
-  if (crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-
+  if (crypto.randomUUID) return crypto.randomUUID();
   return `treino-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 function atualizarQuantidade(quantidade) {
   const contador = document.querySelector("#quantidade-fichas");
-
-  if (!contador) {
-    return;
-  }
-
+  if (!contador) return;
   if (quantidade === 0) {
     contador.textContent = "Nenhuma ficha";
     return;
   }
-
   contador.textContent = `${quantidade} ${quantidade === 1 ? "ficha" : "fichas"}`;
 }
 
@@ -123,9 +131,8 @@ function criarCardTreino(treino, indice) {
   const listaExercicios = document.createElement("ul");
   const botaoAdicionar = document.createElement("button");
   const acoesTreino = document.createElement("div");
-  const botaoEditar = document.createElement("button");
-  const botaoEditarTreino = document.createElement("button");
-  const controlesEdicao = document.createElement("div");
+  const botaoEditarFicha = document.createElement("button");
+  const botaoOrganizar = document.createElement("button");
 
   const exercicios = Array.isArray(treino.exercicios) ? treino.exercicios : [];
   const totalExercicios = exercicios.length;
@@ -144,7 +151,6 @@ function criarCardTreino(treino, indice) {
   icone.textContent = "🏋️";
 
   informacoes.className = "info-treino";
-
   titulo.className = "titulo-treino";
   descricao.className = "descricao-treino";
   quantidadeExercicios.className = "quantidade-exercicios";
@@ -172,62 +178,93 @@ function criarCardTreino(treino, indice) {
     exercicioVazio.textContent = "Nenhum exercício adicionado ainda.";
     listaExercicios.append(exercicioVazio);
   } else {
+    let itemArrastado = null;
+    let indiceOrigem = null;
+
     exercicios.forEach((exercicio, indiceExercicio) => {
       const linha = document.createElement("li");
+      const dragHandle = document.createElement("span");
+      const infoContainer = document.createElement("div");
       const nome = document.createElement("strong");
       const configuracao = document.createElement("span");
       const controles = document.createElement("div");
-      const moverCima = document.createElement("button");
-      const moverBaixo = document.createElement("button");
       const editarExercicio = document.createElement("button");
       const excluirExercicio = document.createElement("button");
 
+      linha.className = "item-exercicio";
+      linha.dataset.indice = indiceExercicio;
+
+      if (exercicio.personalizado) {
+        linha.classList.add("personalizado");
+      }
+
+      dragHandle.className = "drag-handle";
+      dragHandle.setAttribute("aria-label", "Arrastar para reordenar");
+      dragHandle.textContent = "⋮⋮";
+
+      infoContainer.className = "info-exercicio-linha";
       nome.textContent = exercicio.nome || "Exercício sem nome";
       const detalhesExercicio = [
-        `${exercicio.series || 0} séries × ${exercicio.repeticoes || 0} repetições`,
-        exercicio.carga !== null && exercicio.carga !== undefined
-          ? `${exercicio.carga} kg`
-          : null,
-        exercicio.descanso ? `${exercicio.descanso}s de descanso` : null,
+        `${exercicio.series || 0} séries × ${exercicio.repeticoes || 0} reps`,
+        exercicio.carga !== null && exercicio.carga !== undefined ? `${exercicio.carga} kg` : null,
+        exercicio.descanso ? `${exercicio.descanso}s descanso` : null,
       ].filter(Boolean);
 
       configuracao.textContent = detalhesExercicio.join(" · ");
+      infoContainer.append(nome, configuracao);
 
-      linha.className = "item-exercicio";
       controles.className = "controles-exercicio";
-      moverCima.type = "button";
-      moverCima.textContent = "↑";
-      moverCima.title = "Mover exercício para cima";
-      moverCima.disabled = indiceExercicio === 0;
-      moverCima.addEventListener("click", () =>
-        moverExercicio(treino.id, indiceExercicio, -1),
-      );
-      moverBaixo.type = "button";
-      moverBaixo.textContent = "↓";
-      moverBaixo.title = "Mover exercício para baixo";
-      moverBaixo.disabled = indiceExercicio === exercicios.length - 1;
-      moverBaixo.addEventListener("click", () =>
-        moverExercicio(treino.id, indiceExercicio, 1),
-      );
       editarExercicio.type = "button";
       editarExercicio.textContent = "Editar";
-      editarExercicio.addEventListener("click", () =>
-        abrirModalEditarExercicio(treino.id, exercicio.id),
-      );
+      editarExercicio.addEventListener("click", () => abrirModalEditarExercicio(treino.id, exercicio.id));
+
       excluirExercicio.type = "button";
       excluirExercicio.className = "botao-excluir";
       excluirExercicio.textContent = "Excluir";
-      excluirExercicio.addEventListener("click", () =>
-        excluirExercicioDoTreino(treino.id, exercicio.id),
-      );
+      excluirExercicio.addEventListener("click", () => excluirExercicioDoTreino(treino.id, exercicio.id));
 
-      controles.append(
-        moverCima,
-        moverBaixo,
-        editarExercicio,
-        excluirExercicio,
-      );
-      linha.append(nome, configuracao, controles);
+      controles.append(editarExercicio, excluirExercicio);
+      linha.append(dragHandle, infoContainer, controles);
+
+      dragHandle.addEventListener("pointerdown", () => {
+        vibrar(25);
+        linha.draggable = true;
+        itemArrastado = linha;
+        indiceOrigem = indiceExercicio;
+        linha.classList.add("arrastando");
+      });
+
+      linha.addEventListener("dragstart", (e) => {
+        e.dataTransfer.effectAllowed = "move";
+      });
+
+      linha.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        linha.classList.add("drag-over");
+      });
+
+      linha.addEventListener("dragleave", () => {
+        linha.classList.remove("drag-over");
+      });
+
+      linha.addEventListener("drop", (e) => {
+        e.preventDefault();
+        linha.classList.remove("drag-over");
+        const indiceDestino = Number(linha.dataset.indice);
+
+        if (indiceOrigem !== null && indiceOrigem !== indiceDestino) {
+          vibrar(30);
+          reordenarExerciciosLista(treino.id, indiceOrigem, indiceDestino);
+        }
+      });
+
+      linha.addEventListener("dragend", () => {
+        linha.draggable = false;
+        linha.classList.remove("arrastando");
+        document.querySelectorAll(".item-exercicio").forEach((el) => el.classList.remove("drag-over", "arrastando"));
+      });
+
       listaExercicios.append(linha);
     });
   }
@@ -241,42 +278,37 @@ function criarCardTreino(treino, indice) {
 
   acoesTreino.className = "acoes-treino";
 
-  botaoEditar.className = "botao-acao-treino";
-  botaoEditar.type = "button";
-  botaoEditar.textContent = "Editar ficha";
-  botaoEditar.addEventListener("click", () => {
-    if (idTreinoEmModoEdicao === treino.id) {
-      cancelarEdicaoTreino(treino.id);
-    } else {
-      abrirModalEditarTreino(treino.id);
-    }
-  });
+  botaoEditarFicha.className = "botao-acao-treino";
+  botaoEditarFicha.type = "button";
+  botaoEditarFicha.textContent = "Editar dados";
+  botaoEditarFicha.addEventListener("click", () =>
+    abrirModalEditarTreino(treino.id),
+  );
 
-  botaoEditarTreino.className = "botao-acao-treino";
-  botaoEditarTreino.type = "button";
-  botaoEditarTreino.textContent = "Editar treino";
-  botaoEditarTreino.addEventListener("click", () =>
+  botaoOrganizar.className = "botao-acao-treino destaque";
+  botaoOrganizar.type = "button";
+  botaoOrganizar.textContent =
+    idTreinoEmModoEdicao === treino.id ? "Pronto" : "Organizar";
+  botaoOrganizar.addEventListener("click", () =>
     alternarModoEdicaoTreino(treino.id),
   );
 
-  controlesEdicao.className = "controles-edicao-treino";
-  controlesEdicao.append(botaoAdicionar);
-  acoesTreino.append(botaoEditar, botaoEditarTreino);
+  acoesTreino.append(botaoEditarFicha, botaoOrganizar);
   detalhes.append(
     tituloExercicios,
     listaExercicios,
-    controlesEdicao,
+    botaoAdicionar,
     acoesTreino,
   );
 
   if (idTreinoEmModoEdicao === treino.id) {
     detalhes.classList.add("modo-edicao");
-    botaoEditar.textContent = "Cancelar";
-    botaoEditarTreino.textContent = "Salvar";
   }
+
   item.append(botao, detalhes);
 
   botao.addEventListener("click", () => {
+    vibrar(15);
     const seraAberto = botao.getAttribute("aria-expanded") === "false";
 
     document
@@ -297,25 +329,34 @@ function criarCardTreino(treino, indice) {
   return item;
 }
 
+function reordenarExerciciosLista(idTreino, deIndice, paraIndice) {
+  const treinos = obterTreinos();
+  const treino = treinos.find(({ id }) => id === idTreino);
+  if (!treino || !treino.exercicios) return;
+
+  const [exercicioRemovido] = treino.exercicios.splice(deIndice, 1);
+  treino.exercicios.splice(paraIndice, 0, exercicioRemovido);
+
+  salvarTreinos(treinos);
+  idTreinoEmModoEdicao = idTreino;
+  renderizarTreinos();
+  abrirTreino(idTreino);
+}
+
 function criarEstadoVazio(
   mensagemTexto = "Você ainda não criou nenhuma ficha. Crie seu primeiro treino para começar.",
 ) {
   const item = document.createElement("li");
   const mensagem = document.createElement("p");
-
   item.className = "estado-vazio";
   mensagem.textContent = mensagemTexto;
-
   item.append(mensagem);
   return item;
 }
 
 function renderizarTreinos() {
   const lista = document.querySelector("#lista-treinos");
-
-  if (!lista) {
-    return;
-  }
+  if (!lista) return;
 
   const treinos = obterTreinos();
   const termoNormalizado = termoBuscaTreinos.toLocaleLowerCase("pt-BR").trim();
@@ -344,19 +385,47 @@ function renderizarTreinos() {
   atualizarQuantidade(treinos.length);
 }
 
+function renderizarChipsSugestoes() {
+  const container = document.querySelector("#chips-grupos-sugestoes");
+  if (!container) return;
+  container.replaceChildren();
+
+  GRUPOS_SUGERIDOS.forEach((grupo) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip-sugestao";
+    chip.textContent = grupo;
+    chip.classList.toggle("ativo", gruposFichaEmEdicao.includes(grupo));
+
+    chip.addEventListener("click", () => {
+      vibrar(20);
+      if (gruposFichaEmEdicao.includes(grupo)) {
+        gruposFichaEmEdicao = gruposFichaEmEdicao.filter(
+          (item) => item !== grupo,
+        );
+      } else {
+        gruposFichaEmEdicao.push(grupo);
+      }
+      renderizarChipsSugestoes();
+      renderizarGruposFicha();
+    });
+
+    container.append(chip);
+  });
+}
+
 function abrirModalNovoTreino() {
+  vibrar(20);
   const modal = document.querySelector("#modal-novo-treino");
   const campoNome = document.querySelector("#nome-treino");
   const formulario = document.querySelector("#form-novo-treino");
-
-  if (!modal) {
-    return;
-  }
+  if (!modal) return;
 
   idTreinoSendoEditado = null;
   formulario.reset();
   gruposFichaEmEdicao = [];
   preencherGruposFicha();
+  renderizarChipsSugestoes();
   renderizarGruposFicha();
   document.querySelector("#titulo-modal").textContent = "Criar treino";
   formulario.querySelector("button[type='submit']").textContent = "Criar ficha";
@@ -366,19 +435,16 @@ function abrirModalNovoTreino() {
 }
 
 function fecharModalNovoTreino() {
-  const modal = document.querySelector("#modal-novo-treino");
-  modal?.close();
+  document.querySelector("#modal-novo-treino")?.close();
   idTreinoSendoEditado = null;
 }
 
 function abrirModalEditarTreino(idTreino) {
+  vibrar(20);
   const treino = obterTreinos().find(({ id }) => id === idTreino);
   const modal = document.querySelector("#modal-novo-treino");
   const formulario = document.querySelector("#form-novo-treino");
-
-  if (!treino || !modal) {
-    return;
-  }
+  if (!treino || !modal) return;
 
   idTreinoSendoEditado = idTreino;
   document.querySelector("#titulo-modal").textContent = "Editar ficha";
@@ -388,7 +454,9 @@ function abrirModalEditarTreino(idTreino) {
   gruposFichaEmEdicao = treino.gruposMusculares?.length
     ? [...treino.gruposMusculares]
     : treino.descricao.split(", ").filter(Boolean);
+
   preencherGruposFicha();
+  renderizarChipsSugestoes();
   renderizarGruposFicha();
   document.querySelector("#excluir-ficha-modal").hidden = false;
   modal.showModal();
@@ -411,11 +479,10 @@ function preencherGruposFicha() {
 
 function adicionarGrupoFicha(grupo) {
   const nome = grupo.trim();
-  if (!nome || gruposFichaEmEdicao.includes(nome)) {
-    return;
-  }
-
+  if (!nome || gruposFichaEmEdicao.includes(nome)) return;
+  vibrar(20);
   gruposFichaEmEdicao.push(nome);
+  renderizarChipsSugestoes();
   renderizarGruposFicha();
 }
 
@@ -435,9 +502,11 @@ function renderizarGruposFicha() {
     remover.setAttribute("aria-label", `Remover ${grupo}`);
     remover.textContent = "×";
     remover.addEventListener("click", () => {
+      vibrar(15);
       gruposFichaEmEdicao = gruposFichaEmEdicao.filter(
         (item) => item !== grupo,
       );
+      renderizarChipsSugestoes();
       renderizarGruposFicha();
     });
 
@@ -448,10 +517,7 @@ function renderizarGruposFicha() {
 
 async function excluirTreino(idTreino) {
   const treino = obterTreinos().find(({ id }) => id === idTreino);
-
-  if (!treino) {
-    return;
-  }
+  if (!treino) return;
 
   const confirmou = await mostrarConfirmacao({
     titulo: "Excluir ficha",
@@ -459,66 +525,37 @@ async function excluirTreino(idTreino) {
     textoConfirmar: "Excluir",
   });
 
-  if (!confirmou) {
-    return;
-  }
+  if (!confirmou) return;
 
   salvarTreinos(obterTreinos().filter(({ id }) => id !== idTreino));
   renderizarTreinos();
+  mostrarAviso("Ficha excluída com sucesso.");
 }
 
 function abrirTreino(idTreino) {
   const botao = document.querySelector(
     `.card-treino[data-treino-id="${idTreino}"]`,
   );
-
   if (botao?.getAttribute("aria-expanded") === "false") {
     botao.click();
   }
 }
 
 function alternarModoEdicaoTreino(idTreino) {
-  if (idTreinoEmModoEdicao === idTreino) {
-    salvarEdicaoTreino(idTreino);
-    return;
-  }
-
-  const treino = obterTreinos().find(({ id }) => id === idTreino);
-  backupTreinoAntesEdicao = JSON.parse(JSON.stringify(treino));
-  idTreinoEmModoEdicao = idTreino;
-  renderizarTreinos();
-  abrirTreino(idTreino);
-}
-
-function salvarEdicaoTreino(idTreino) {
-  idTreinoEmModoEdicao = null;
-  backupTreinoAntesEdicao = null;
-  renderizarTreinos();
-  abrirTreino(idTreino);
-}
-
-function cancelarEdicaoTreino(idTreino) {
-  if (backupTreinoAntesEdicao?.id === idTreino) {
-    const treinos = obterTreinos().map((treino) =>
-      treino.id === idTreino ? backupTreinoAntesEdicao : treino,
-    );
-    salvarTreinos(treinos);
-  }
-
-  idTreinoEmModoEdicao = null;
-  backupTreinoAntesEdicao = null;
+  vibrar(20);
+  idTreinoEmModoEdicao = idTreinoEmModoEdicao === idTreino ? null : idTreino;
   renderizarTreinos();
   abrirTreino(idTreino);
 }
 
 function moverExercicio(idTreino, indiceAtual, direcao) {
+  vibrar(20);
   const treinos = obterTreinos();
   const treino = treinos.find(({ id }) => id === idTreino);
   const novoIndice = indiceAtual + direcao;
 
-  if (!treino || novoIndice < 0 || novoIndice >= treino.exercicios.length) {
+  if (!treino || novoIndice < 0 || novoIndice >= treino.exercicios.length)
     return;
-  }
 
   [treino.exercicios[indiceAtual], treino.exercicios[novoIndice]] = [
     treino.exercicios[novoIndice],
@@ -535,29 +572,43 @@ async function excluirExercicioDoTreino(idTreino, idExercicio) {
   const treinos = obterTreinos();
   const treino = treinos.find(({ id }) => id === idTreino);
   const exercicio = treino?.exercicios.find(({ id }) => id === idExercicio);
-
-  if (!exercicio) {
-    return;
-  }
+  if (!exercicio) return;
 
   const confirmou = await mostrarConfirmacao({
     titulo: "Excluir exercício",
-    mensagem: `Excluir o exercício “${exercicio.nome}”? Esta ação não pode ser desfeita.`,
+    mensagem: `Excluir o exercício “${exercicio.nome}”?`,
     textoConfirmar: "Excluir",
   });
 
-  if (!confirmou) {
-    return;
-  }
+  if (!confirmou) return;
 
-  treino.exercicios = treino.exercicios.filter(
-    ({ id }) => id !== idExercicio,
-  );
-
+  treino.exercicios = treino.exercicios.filter(({ id }) => id !== idExercicio);
   salvarTreinos(treinos);
   idTreinoEmModoEdicao = idTreino;
   renderizarTreinos();
   abrirTreino(idTreino);
+}
+
+function configurarControlesPassoRapido() {
+  document.querySelectorAll(".btn-step").forEach((botao) => {
+    botao.addEventListener("click", () => {
+      vibrar(15);
+      const targetId = botao.dataset.target;
+      const step = Number(botao.dataset.step);
+      const input = document.getElementById(targetId);
+      if (!input) return;
+
+      const valorAtual = Number(input.value) || 0;
+      const min = input.min !== "" ? Number(input.min) : 0;
+      const max = input.max !== "" ? Number(input.max) : Infinity;
+
+      let novoValor = valorAtual + step;
+      if (novoValor < min) novoValor = min;
+      if (novoValor > max) novoValor = max;
+
+      input.value = novoValor;
+    });
+  });
 }
 
 function configurarFormularioNovoTreino() {
@@ -576,19 +627,19 @@ function configurarFormularioNovoTreino() {
 
   botaoCriar?.addEventListener("click", abrirModalNovoTreino);
   botaoCancelar?.addEventListener("click", fecharModalNovoTreino);
+
   botaoAdicionarGrupo?.addEventListener("click", () => {
     adicionarGrupoFicha(seletorGrupo.value);
     seletorGrupo.value = "";
   });
+
   botaoAdicionarPersonalizado?.addEventListener("click", () => {
     adicionarGrupoFicha(campoGrupoPersonalizado.value);
     campoGrupoPersonalizado.value = "";
   });
-  botaoExcluirFicha?.addEventListener("click", () => {
-    if (!idTreinoSendoEditado) {
-      return;
-    }
 
+  botaoExcluirFicha?.addEventListener("click", () => {
+    if (!idTreinoSendoEditado) return;
     const idTreino = idTreinoSendoEditado;
     fecharModalNovoTreino();
     excluirTreino(idTreino);
@@ -596,15 +647,13 @@ function configurarFormularioNovoTreino() {
 
   formulario?.addEventListener("submit", (evento) => {
     evento.preventDefault();
+    vibrar(30);
 
     const dados = new FormData(formulario);
     const nome = dados.get("nome")?.trim();
-    const descricao =
-      gruposFichaEmEdicao.join(", ") || "Sem grupos musculares definidos";
+    const descricao = gruposFichaEmEdicao.join(", ") || "Geral";
 
-    if (!nome) {
-      return;
-    }
+    if (!nome) return;
 
     const treinos = obterTreinos();
 
@@ -614,10 +663,10 @@ function configurarFormularioNovoTreino() {
       treino.descricao = descricao;
       treino.gruposMusculares = [...gruposFichaEmEdicao];
       salvarTreinos(treinos);
-      formulario.reset();
       fecharModalNovoTreino();
       renderizarTreinos();
       abrirTreino(treino.id);
+      mostrarAviso("Ficha atualizada com sucesso.");
       return;
     }
 
@@ -632,9 +681,9 @@ function configurarFormularioNovoTreino() {
 
     treinos.push(novoTreino);
     salvarTreinos(treinos);
-    formulario.reset();
     fecharModalNovoTreino();
     renderizarTreinos();
+    mostrarAviso("Ficha criada com sucesso!");
   });
 }
 
@@ -667,13 +716,12 @@ function preencherGrupos() {
   const filtroRegiao = document.querySelector("#filtro-regiao");
   const filtroGrupo = document.querySelector("#filtro-grupo");
   const filtroFoco = document.querySelector("#filtro-foco");
-  
+
   if (!Array.isArray(window.ESTRUTURA_MUSCULAR)) return;
 
   const regiao = window.ESTRUTURA_MUSCULAR.find(
     ({ id }) => id === filtroRegiao.value,
   );
-
   filtroGrupo.replaceChildren(criarOpcao("", "Todos os grupos"));
   filtroFoco.replaceChildren(criarOpcao("", "Todos os focos"));
   filtroGrupo.disabled = !regiao;
@@ -725,6 +773,7 @@ function obterExerciciosFiltrados() {
 }
 
 function selecionarExercicio(exercicio) {
+  vibrar(20);
   exercicioSelecionado = exercicio;
   document.querySelector("#exercicio-selecionado").textContent =
     `Selecionado: ${exercicio.nome}`;
@@ -742,7 +791,7 @@ function renderizarOpcoesExercicios() {
     const mensagem = document.createElement("p");
     mensagem.className = "sem-resultados";
     mensagem.textContent =
-      "Nenhum exercício encontrado. Você pode criar um personalizado.";
+      "Nenhum exercício encontrado. Você pode criar um personalizado abaixo.";
     lista.append(mensagem);
     return;
   }
@@ -768,6 +817,7 @@ function renderizarOpcoesExercicios() {
 }
 
 function abrirModalAdicionarExercicio(idTreino) {
+  vibrar(20);
   const modal = document.querySelector("#modal-adicionar-exercicio");
   const formulario = document.querySelector("#form-adicionar-exercicio");
 
@@ -786,12 +836,10 @@ function abrirModalAdicionarExercicio(idTreino) {
 }
 
 function abrirModalEditarExercicio(idTreino, idExercicio) {
+  vibrar(20);
   const treino = obterTreinos().find(({ id }) => id === idTreino);
   const exercicio = treino?.exercicios.find(({ id }) => id === idExercicio);
-
-  if (!exercicio) {
-    return;
-  }
+  if (!exercicio) return;
 
   abrirModalAdicionarExercicio(idTreino);
   idExercicioSendoEditado = idExercicio;
@@ -884,7 +932,6 @@ function configurarModalExercicio() {
       limparSelecaoExercicio();
       return;
     }
-
     selecionarExercicio({ id: "personalizado", nome, personalizado: true });
   });
 
@@ -892,15 +939,12 @@ function configurarModalExercicio() {
 
   formulario?.addEventListener("submit", (evento) => {
     evento.preventDefault();
+    vibrar(30);
 
-    if (!idTreinoEmEdicao || !exercicioSelecionado) {
-      return;
-    }
+    if (!idTreinoEmEdicao || !exercicioSelecionado) return;
 
     const treino = obterTreinos().find(({ id }) => id === idTreinoEmEdicao);
-    if (!treino) {
-      return;
-    }
+    if (!treino) return;
 
     const series = Number(document.querySelector("#series-exercicio").value);
     const repeticoes = Number(
@@ -941,7 +985,6 @@ function configurarModalExercicio() {
     salvarTreinos(treinos);
     fecharModalAdicionarExercicio();
     renderizarTreinos();
-    idTreinoEmModoEdicao = treino.id;
     abrirTreino(treino.id);
   });
 }
@@ -957,6 +1000,7 @@ function baixarArquivo(nome, conteudo, tipo) {
 }
 
 function exportarBackup() {
+  vibrar(20);
   const backup = {
     app: "GymFlow",
     versao: 1,
@@ -981,23 +1025,18 @@ async function importarBackup(arquivo) {
 
     if (
       !Array.isArray(treinosImportados) ||
-      !treinosImportados.every(
-        (treino) => treino && typeof treino.nome === "string",
-      )
+      !treinosImportados.every((t) => t && typeof t.nome === "string")
     ) {
       throw new Error("Formato inválido");
     }
 
     const confirmou = await mostrarConfirmacao({
       titulo: "Importar backup",
-      mensagem:
-        "Importar este backup substituirá as fichas atuais deste dispositivo. Deseja continuar?",
+      mensagem: "Substituir as fichas atuais por este backup?",
       textoConfirmar: "Importar",
     });
 
-    if (!confirmou) {
-      return;
-    }
+    if (!confirmou) return;
 
     const treinosNormalizados = treinosImportados.map((treino) => ({
       ...treino,
@@ -1014,7 +1053,7 @@ async function importarBackup(arquivo) {
     renderizarTreinos();
     mostrarAviso("Backup importado com sucesso.");
   } catch {
-    mostrarAviso("Não foi possível importar este arquivo de backup.");
+    mostrarAviso("Não foi possível importar este arquivo.");
   }
 }
 
@@ -1028,6 +1067,7 @@ function configurarBuscaEBackups() {
     termoBuscaTreinos = busca.value;
     renderizarTreinos();
   });
+
   botaoExportar?.addEventListener("click", exportarBackup);
   botaoImportar?.addEventListener("click", () => arquivoBackup?.click());
   arquivoBackup?.addEventListener("change", async () => {
@@ -1040,6 +1080,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderizarTreinos();
   configurarFormularioNovoTreino();
   configurarModalExercicio();
+  configurarControlesPassoRapido();
   configurarBuscaEBackups();
 });
 
@@ -1056,19 +1097,11 @@ const fecharEmBreve = document.querySelector("#fechar-em-breve");
 const entendiEmBreve = document.querySelector("#entendi-em-breve");
 
 botaoPerfil?.addEventListener("click", () => {
+  vibrar(20);
   modalEmBreve?.showModal();
 });
-
-fecharEmBreve?.addEventListener("click", () => {
-  modalEmBreve?.close();
-});
-
-entendiEmBreve?.addEventListener("click", () => {
-  modalEmBreve?.close();
-});
-
+fecharEmBreve?.addEventListener("click", () => modalEmBreve?.close());
+entendiEmBreve?.addEventListener("click", () => modalEmBreve?.close());
 modalEmBreve?.addEventListener("click", (event) => {
-  if (event.target === modalEmBreve) {
-    modalEmBreve.close();
-  }
+  if (event.target === modalEmBreve) modalEmBreve.close();
 });

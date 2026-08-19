@@ -5,9 +5,11 @@
   --card-hover: #2a342c;
   --borda: #384438;
   --verde: #b7f531;
+  --verde-hover: #cbf95f;
   --texto: #f3f7f1;
   --texto-secundario: #9ca69f;
   --texto-fraco: #748076;
+  --vermelho: #ff7a7a;
   --raio: 18px;
   --sombra: 0 12px 28px rgba(0, 0, 0, 0.28);
 }
@@ -22,7 +24,13 @@ body {
   min-height: 100dvh;
   display: grid;
   grid-template-rows: auto 1fr auto;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
   background: radial-gradient(circle at top right, #263222, var(--fundo) 42%);
   color: var(--texto);
 }
@@ -34,6 +42,7 @@ select {
 }
 button {
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .topo,
@@ -71,6 +80,8 @@ h1 {
   border-radius: 50%;
   background: var(--card);
   color: var(--verde);
+  min-height: 44px;
+  min-width: 44px;
 }
 .botao-perfil {
   width: 48px;
@@ -84,7 +95,8 @@ h1 {
 .campo input,
 .campo select {
   width: 100%;
-  padding: 16px 18px;
+  min-height: 48px;
+  padding: 12px 16px;
   border: 1px solid var(--borda);
   border-radius: 14px;
   outline: none;
@@ -104,6 +116,57 @@ h1 {
 .campo select:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+.chips-sugestoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip-sugestao {
+  min-height: 38px;
+  padding: 6px 14px;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--texto);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.chip-sugestao:hover {
+  border-color: var(--verde);
+  background: var(--card-hover);
+}
+.chip-sugestao.ativo {
+  border-color: var(--verde);
+  background: #2e3b2a;
+  color: var(--verde);
+}
+
+.controle-rapido-input {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  gap: 6px;
+  align-items: center;
+}
+.controle-rapido-input input {
+  text-align: center;
+  font-weight: 700;
+}
+.btn-step {
+  min-height: 48px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--texto);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.btn-step:active {
+  background: #384438;
 }
 
 .cabecalho-secao {
@@ -137,6 +200,82 @@ h1 {
 .item-treino:has(.esta-aberto) {
   border-color: var(--verde);
 }
+/*REORDENAÇÃO POR ARRASTO (DRAG & DROP)*/
+
+.item-exercicio {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--fundo-secundario);
+  border: 1px solid transparent;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+  user-select: none;
+}
+
+.item-exercicio.personalizado {
+  border-left: 3px solid var(--verde);
+}
+
+.info-exercicio-linha {
+  display: grid;
+  gap: 4px;
+}
+
+/* Puxador de 6 pontos (Drag Handle) */
+.drag-handle {
+  display: none;
+  place-items: center;
+  width: 36px;
+  height: 44px;
+  color: var(--texto-secundario);
+  font-size: 1.3rem;
+  cursor: grab;
+  touch-action: none; /* Impede o scroll da tela enquanto arrasta */
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+  color: var(--verde);
+}
+
+.modo-edicao .drag-handle {
+  display: grid;
+}
+
+/* Estado visual durante o arrasto */
+.item-exercicio.arrastando {
+  opacity: 0.55;
+  background: var(--card-hover);
+  border: 1px dashed var(--verde);
+  transform: scale(0.98);
+}
+
+.item-exercicio.drag-over {
+  border-top: 2px solid var(--verde);
+}
+
+.controles-exercicio {
+  display: none;
+  gap: 8px;
+}
+
+.modo-edicao .controles-exercicio {
+  display: flex;
+}
+
+.controles-exercicio button {
+  min-height: 40px;
+  padding: 6px 12px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--texto);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
 .card-treino {
   display: grid;
   width: 100%;
@@ -154,9 +293,7 @@ h1 {
 }
 .card-treino:hover,
 .card-treino:focus-visible {
-  border-color: var(--verde);
   background: var(--card-hover);
-  transform: translateY(-2px);
   outline: none;
 }
 .icone-treino {
@@ -197,7 +334,7 @@ h1 {
   color: var(--verde) !important;
   font-size: 1.7rem !important;
   line-height: 1;
-  transition: transform 0.2s;
+  transition: transform 0.25s ease;
 }
 .esta-aberto .seta {
   transform: rotate(90deg);
@@ -219,40 +356,68 @@ h1 {
 }
 .lista-exercicios li {
   display: grid;
-  gap: 4px;
-  padding: 13px;
-  border-radius: 12px;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 14px;
   background: var(--fundo-secundario);
+  border: 1px solid transparent;
+}
+.lista-exercicios li.personalizado {
+  border-left: 3px solid var(--verde);
 }
 .lista-exercicios strong {
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 .lista-exercicios span,
 .exercicio-vazio {
   color: var(--texto-secundario);
-  font-size: 0.82rem;
+  font-size: 0.86rem;
 }
-.controles-edicao-treino,
+
 .controles-exercicio {
   display: none;
+  grid-template-columns: 44px 44px 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
 }
-.modo-edicao .controles-edicao-treino,
 .modo-edicao .controles-exercicio {
   display: grid;
 }
+.controles-exercicio button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--texto);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+.controles-exercicio button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.controles-exercicio .botao-excluir {
+  border-color: rgba(255, 122, 122, 0.4);
+  color: var(--vermelho);
+}
+
 .botao-adicionar-exercicio {
   width: 100%;
+  min-height: 48px;
   margin-top: 14px;
   padding: 12px;
   border: 1px dashed var(--verde);
-  border-radius: 12px;
+  border-radius: 14px;
   background: transparent;
   color: var(--verde);
   font-weight: 700;
+  font-size: 0.95rem;
 }
 .botao-adicionar-exercicio:hover {
   background: rgba(183, 245, 49, 0.08);
 }
+
 .acoes-treino {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -260,41 +425,21 @@ h1 {
   margin-top: 18px;
 }
 .botao-acao-treino {
-  min-height: 44px;
+  min-height: 46px;
   border-radius: 12px;
   font-weight: 700;
-}
-.botao-acao-treino {
   border: 1px solid var(--borda);
   background: transparent;
   color: var(--texto);
 }
-.botao-excluir {
-  color: #ff8f8f;
-}
-.controles-exercicio {
-  grid-template-columns: auto auto 1fr 1fr;
-  gap: 8px;
-  margin-top: 10px;
-}
-.controles-exercicio button {
-  min-height: 36px;
-  padding: 6px 9px;
-  border: 1px solid var(--borda);
-  border-radius: 9px;
-  background: var(--card);
-  color: var(--texto);
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-.controles-exercicio button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.botao-acao-treino.destaque {
+  border-color: var(--verde);
+  color: var(--verde);
 }
 
 .aviso-app {
   position: fixed;
-  z-index: 10;
+  z-index: 100;
   right: 20px;
   bottom: 20px;
   max-width: min(360px, calc(100% - 40px));
@@ -305,26 +450,23 @@ h1 {
   color: #eff9e7;
   box-shadow: var(--sombra);
   font-weight: 700;
-
   opacity: 0;
   transform: translateY(20px) scale(0.95);
   transition:
     opacity 0.25s ease,
     transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
-
 .aviso-app:not([hidden]) {
   opacity: 1;
   transform: translateY(0) scale(1);
 }
-
 .aviso-app.saindo {
   opacity: 0;
   transform: translateY(10px) scale(0.97);
 }
 
 .estado-vazio {
-  padding: 30px 20px;
+  padding: 36px 20px;
   border: 1px dashed var(--borda);
   border-radius: var(--raio);
   color: var(--texto-secundario);
@@ -363,68 +505,21 @@ h1 {
   color: var(--texto);
 }
 .botao-excluir-ficha {
-  min-height: 46px;
+  min-height: 48px;
   border: 1px solid #814747;
   border-radius: 14px;
   background: transparent;
-  color: #ff9c9c;
+  color: var(--vermelho);
   font-weight: 700;
 }
 .botao-primario:hover,
 .botao-secundario:hover {
   filter: brightness(1.08);
-  transform: translateY(-2px);
 }
 
-.modal-confirmacao {
-  width: min(calc(100% - 32px), 460px);
-  margin: auto;
-  border: 1px solid var(--borda);
-  border-radius: 24px;
-  background: var(--fundo-secundario);
-  color: var(--texto);
-  box-shadow: var(--sombra);
-}
-
-.modal-confirmacao::backdrop {
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(3px);
-}
-
-.form-confirmacao {
-  display: grid;
-  gap: 22px;
-  padding: 26px;
-}
-
-.mensagem-confirmacao {
-  color: var(--texto-secundario);
-  line-height: 1.5;
-}
-
-.acoes-confirmacao {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.acoes-confirmacao button {
-  min-height: 48px;
-  border-radius: 12px;
-  font-weight: 700;
-}
-
-.botao-confirmar {
-  border: 1px solid #814747;
-  background: #814747;
-  color: var(--texto);
-}
-
-.botao-confirmar:hover {
-  filter: brightness(1.1);
-}
-
-.modal-treino {
+.modal-confirmacao,
+.modal-treino,
+.modal-em-breve {
   width: min(calc(100% - 32px), 520px);
   margin: auto;
   border: 1px solid var(--borda);
@@ -433,29 +528,26 @@ h1 {
   color: var(--texto);
   box-shadow: var(--sombra);
 }
-.modal-treino::backdrop {
+.modal-confirmacao::backdrop,
+.modal-treino::backdrop,
+.modal-em-breve::backdrop {
   background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(3px);
+  backdrop-filter: blur(4px);
 }
+.form-confirmacao,
 .form-treino {
   display: grid;
-  gap: 22px;
-  padding: 26px;
+  gap: 20px;
+  padding: 24px;
 }
 .cabecalho-modal {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
 }
 .cabecalho-modal h2 {
-  font-size: 1.8rem;
-}
-.botao-fechar {
-  width: 38px;
-  height: 38px;
   font-size: 1.7rem;
-  line-height: 1;
 }
 .campo {
   display: grid;
@@ -471,12 +563,12 @@ h1 {
   gap: 8px;
 }
 .botao-adicionar-grupo {
-  padding: 0 14px;
+  min-height: 48px;
+  padding: 0 16px;
   border: 1px solid var(--verde);
-  border-radius: 12px;
+  border-radius: 14px;
   background: transparent;
   color: var(--verde);
-  font-size: 0.85rem;
   font-weight: 700;
 }
 .lista-grupos-ficha {
@@ -488,20 +580,21 @@ h1 {
 .tag-grupo {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 7px 10px;
+  gap: 8px;
+  padding: 8px 12px;
   border-radius: 999px;
   background: #2e3b2a;
   color: var(--verde);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 700;
 }
 .remover-grupo {
   border: none;
   background: transparent;
   color: inherit;
-  font-size: 1rem;
+  font-size: 1.2rem;
   line-height: 1;
+  padding-left: 2px;
 }
 .aviso-formulario {
   color: var(--texto-secundario);
@@ -510,7 +603,7 @@ h1 {
 }
 .filtros-exercicios {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 .resultados-exercicios {
   display: grid;
@@ -524,15 +617,15 @@ h1 {
 }
 .lista-opcoes-exercicios {
   display: grid;
-  max-height: 230px;
+  max-height: 220px;
   gap: 8px;
   overflow-y: auto;
 }
 .opcao-exercicio {
   display: grid;
-  gap: 3px;
+  gap: 4px;
   width: 100%;
-  padding: 13px;
+  padding: 12px 14px;
   border: 1px solid var(--borda);
   border-radius: 12px;
   background: var(--card);
@@ -546,10 +639,10 @@ h1 {
 }
 .opcao-exercicio span {
   color: var(--texto-secundario);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
 }
 .sem-resultados {
-  padding: 12px;
+  padding: 14px;
   color: var(--texto-secundario);
   font-size: 0.9rem;
   text-align: center;
@@ -557,11 +650,11 @@ h1 {
 .configuracao-exercicio {
   display: grid;
   gap: 14px;
-  padding-top: 4px;
+  padding-top: 6px;
 }
 .exercicio-selecionado {
   color: var(--verde);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 700;
 }
 .grade-campo {
@@ -573,7 +666,40 @@ h1 {
   cursor: not-allowed;
   filter: grayscale(1);
   opacity: 0.5;
-  transform: none;
+}
+
+.modal-em-breve .conteudo-em-breve {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px;
+  text-align: center;
+}
+.icone-em-breve {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  place-items: center;
+  margin-bottom: 18px;
+  border-radius: 50%;
+  background: #313c31;
+  font-size: 30px;
+}
+.conteudo-em-breve h2 {
+  margin-bottom: 10px;
+  font-size: 1.5rem;
+}
+.conteudo-em-breve p {
+  max-width: 340px;
+  margin-bottom: 24px;
+  color: var(--texto-secundario);
+  line-height: 1.5;
+}
+#fechar-em-breve {
+  position: absolute;
+  top: 14px;
+  right: 14px;
 }
 
 .sr-only {
@@ -586,10 +712,10 @@ h1 {
 }
 button:focus-visible {
   outline: 3px solid var(--verde);
-  outline-offset: 3px;
+  outline-offset: 2px;
 }
 
-@media (max-width: 420px) {
+@media (max-width: 480px) {
   .topo,
   main,
   .acoes {
@@ -598,118 +724,10 @@ button:focus-visible {
   .acoes-secundarias {
     grid-template-columns: 1fr;
   }
-  .card-treino {
-    padding: 15px;
-  }
   .grade-campo {
     grid-template-columns: 1fr;
   }
-}
-
-/* =========================
-   MODAL EM BREVE
-   ========================= */
-
-.modal-em-breve {
-  width: min(calc(100% - 32px), 420px);
-  margin: auto;
-  padding: 0;
-
-  border: 1px solid var(--borda);
-  border-radius: 24px;
-
-  background: var(--fundo-secundario);
-  color: var(--texto);
-
-  box-shadow: var(--sombra);
-}
-
-.modal-em-breve::backdrop {
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(3px);
-}
-
-.conteudo-em-breve {
-  position: relative;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  padding: 32px;
-
-  text-align: center;
-}
-
-.icone-em-breve {
-  display: grid;
-  width: 64px;
-  height: 64px;
-  place-items: center;
-
-  margin-bottom: 18px;
-
-  border-radius: 50%;
-  background: #313c31;
-
-  font-size: 30px;
-}
-
-.conteudo-em-breve h2 {
-  margin-bottom: 10px;
-
-  font-size: 1.5rem;
-}
-
-.conteudo-em-breve p {
-  max-width: 340px;
-  margin-bottom: 24px;
-
-  color: var(--texto-secundario);
-  line-height: 1.5;
-}
-
-#fechar-em-breve {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-
-  width: 38px;
-  height: 38px;
-
-  display: grid;
-  place-items: center;
-
-  padding: 0;
-
-  border: 1px solid var(--borda);
-  border-radius: 50%;
-
-  background: var(--card);
-  color: var(--texto);
-
-  font-size: 1.5rem;
-  line-height: 1;
-}
-
-#fechar-em-breve:hover {
-  background: var(--card-hover);
-  color: var(--verde);
-}
-
-#entendi-em-breve {
-  width: 100%;
-  min-height: 48px;
-
-  border: none;
-  border-radius: 14px;
-
-  background: var(--verde);
-  color: #132014;
-
-  font-weight: 800;
-}
-
-#entendi-em-breve:hover {
-  filter: brightness(1.08);
+  .controles-exercicio {
+    grid-template-columns: 44px 44px 1fr 1fr;
+  }
 }

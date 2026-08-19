@@ -13,7 +13,12 @@
         <p class="saudacao">Bem-vindo de volta</p>
         <h1>Suas fichas</h1>
       </div>
-      <button id="botao-perfil" class="botao-perfil" type="button" aria-label="Abrir perfil">
+      <button
+        id="botao-perfil"
+        class="botao-perfil"
+        type="button"
+        aria-label="Abrir perfil"
+      >
         👤
       </button>
     </header>
@@ -21,12 +26,14 @@
     <main>
       <search class="busca">
         <label class="sr-only" for="buscar-treino">Buscar treino</label>
-        <input
-          id="buscar-treino"
-          type="search"
-          placeholder="Buscar treino"
-          autocomplete="off"
-        />
+        <div class="campo-busca-container">
+          <input
+            id="buscar-treino"
+            type="search"
+            placeholder="Buscar treino"
+            autocomplete="off"
+          />
+        </div>
       </search>
 
       <section class="treinos" aria-labelledby="titulo-treinos">
@@ -87,11 +94,7 @@
             Cancelar
           </button>
 
-          <button
-            id="confirmar-acao"
-            class="botao-confirmar"
-            type="button"
-          >
+          <button id="confirmar-acao" class="botao-confirmar" type="button">
             Confirmar
           </button>
         </div>
@@ -125,14 +128,19 @@
             id="nome-treino"
             name="nome"
             type="text"
-            placeholder="Ex.: Treino A"
+            placeholder="Ex.: Treino A (Peito e Tríceps)"
             maxlength="50"
             required
           />
         </div>
 
         <div class="campo">
-          <label for="grupo-ficha">Grupos musculares</label>
+          <label>Sugestões rápidas de grupos</label>
+          <div id="chips-grupos-sugestoes" class="chips-sugestoes"></div>
+        </div>
+
+        <div class="campo">
+          <label for="grupo-ficha">Todos os grupos musculares</label>
           <div class="linha-adicionar-grupo">
             <select id="grupo-ficha">
               <option value="">Escolha um grupo muscular</option>
@@ -158,7 +166,7 @@
             <input
               id="grupo-personalizado-ficha"
               type="text"
-              placeholder="Ex.: Mobilidade"
+              placeholder="Ex.: Mobilidade, Abdômen"
               maxlength="50"
             />
             <button
@@ -172,7 +180,7 @@
         </div>
 
         <p class="aviso-formulario">
-          Você poderá adicionar os exercícios na próxima tela.
+          Você poderá organizar e adicionar exercícios logo após criar a ficha.
         </p>
         <button
           id="excluir-ficha-modal"
@@ -271,7 +279,7 @@
           <input
             id="nome-exercicio-personalizado"
             type="text"
-            placeholder="Ex.: Rosca no aparelho da academia"
+            placeholder="Ex.: Elevação pélvica unilateral"
             maxlength="80"
           />
         </div>
@@ -283,44 +291,129 @@
           aria-labelledby="titulo-configuracao"
         >
           <p id="exercicio-selecionado" class="exercicio-selecionado"></p>
-          <h3 id="titulo-configuracao">Configuração</h3>
+          <h3 id="titulo-configuracao">Configuração das Séries</h3>
 
           <div class="grade-campo">
             <div class="campo">
               <label for="series-exercicio">Séries</label>
-              <input
-                id="series-exercicio"
-                type="number"
-                min="1"
-                max="99"
-                value="3"
-                required
-              />
+              <div class="controle-rapido-input">
+                <button
+                  type="button"
+                  class="btn-step"
+                  data-target="series-exercicio"
+                  data-step="-1"
+                >
+                  -
+                </button>
+                <input
+                  id="series-exercicio"
+                  type="number"
+                  inputmode="numeric"
+                  min="1"
+                  max="99"
+                  value="3"
+                  required
+                />
+                <button
+                  type="button"
+                  class="btn-step"
+                  data-target="series-exercicio"
+                  data-step="1"
+                >
+                  +
+                </button>
+              </div>
             </div>
+
             <div class="campo">
               <label for="repeticoes-exercicio">Repetições</label>
-              <input
-                id="repeticoes-exercicio"
-                type="number"
-                min="1"
-                max="999"
-                value="10"
-                required
-              />
+              <div class="controle-rapido-input">
+                <button
+                  type="button"
+                  class="btn-step"
+                  data-target="repeticoes-exercicio"
+                  data-step="-1"
+                >
+                  -
+                </button>
+                <input
+                  id="repeticoes-exercicio"
+                  type="number"
+                  inputmode="numeric"
+                  min="1"
+                  max="999"
+                  value="10"
+                  required
+                />
+                <button
+                  type="button"
+                  class="btn-step"
+                  data-target="repeticoes-exercicio"
+                  data-step="1"
+                >
+                  +
+                </button>
+              </div>
             </div>
+
             <div class="campo">
               <label for="carga-exercicio">Carga (kg)</label>
-              <input
-                id="carga-exercicio"
-                type="number"
-                min="0"
-                step="0.5"
-                placeholder="Opcional"
-              />
+              <div class="controle-rapido-input">
+                <button
+                  type="button"
+                  class="btn-step"
+                  data-target="carga-exercicio"
+                  data-step="-2.5"
+                >
+                  -
+                </button>
+                <input
+                  id="carga-exercicio"
+                  type="number"
+                  inputmode="decimal"
+                  min="0"
+                  step="0.5"
+                  placeholder="0"
+                />
+                <button
+                  type="button"
+                  class="btn-step"
+                  data-target="carga-exercicio"
+                  data-step="2.5"
+                >
+                  +
+                </button>
+              </div>
             </div>
+
             <div class="campo">
               <label for="descanso-exercicio">Descanso (s)</label>
-              <input id="descanso-exercicio" type="number" min="0" value="60" />
+              <div class="controle-rapido-input">
+                <button
+                  type="button"
+                  class="btn-step"
+                  data-target="descanso-exercicio"
+                  data-step="-15"
+                >
+                  -
+                </button>
+                <input
+                  id="descanso-exercicio"
+                  type="number"
+                  inputmode="numeric"
+                  min="0"
+                  step="5"
+                  value="60"
+                />
+                <button
+                  type="button"
+                  class="btn-step"
+                  data-target="descanso-exercicio"
+                  data-step="15"
+                >
+                  +
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -347,22 +440,16 @@
           ×
         </button>
 
-        <div class="icone-em-breve">
-          🚧
-        </div>
+        <div class="icone-em-breve">🚧</div>
 
         <h2>Em breve</h2>
 
         <p>
-          O perfil do usuário está sendo preparado.
-          Em breve você poderá personalizar e gerenciar seu perfil por aqui.
+          O perfil do usuário está sendo preparado. Em breve você poderá
+          gerenciar preferências e metas por aqui.
         </p>
 
-        <button
-          id="entendi-em-breve"
-          class="botao-primario"
-          type="button"
-        >
+        <button id="entendi-em-breve" class="botao-primario" type="button">
           Entendi
         </button>
       </div>
