@@ -1,16 +1,5 @@
 const CHAVE_TREINOS = "gymflow:treinos";
-const GRUPOS_SUGERIDOS = [
-  "Peito",
-  "Costas",
-  "Ombros",
-  "Bíceps",
-  "Tríceps",
-  "Quadríceps",
-  "Posteriores",
-  "Glúteos",
-  "Panturrilhas",
-  "Core",
-];
+const GRUPOS_SUGERIDOS = ["Peito", "Costas", "Ombros", "Bíceps", "Tríceps", "Quadríceps", "Posteriores", "Glúteos", "Panturrilhas", "Core"];
 
 let idTreinoEmEdicao = null;
 let exercicioSelecionado = null;
@@ -18,9 +7,14 @@ let idTreinoSendoEditado = null;
 let idTreinoEmModoEdicao = null;
 let idExercicioSendoEditado = null;
 let gruposFichaEmEdicao = [];
-let backupTreinoAntesEdicao = null;
 let termoBuscaTreinos = "";
 let temporizadorAviso;
+
+// ESTADO DO MODO DE EXECUÇÃO
+let sessaoAtiva = null;
+let timerDecorridoInterval = null;
+let timerDescansoInterval = null;
+let tempoDescansoRestante = 0;
 
 function vibrar(ms = 25) {
   if ("vibrate" in navigator) {
@@ -28,6 +22,29 @@ function vibrar(ms = 25) {
       navigator.vibrate(ms);
     } catch {}
   }
+}
+
+function emitirBeep() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.35);
+  } catch {}
+}
+
+function formatarTempo(segundos) {
+  const min = Math.floor(segundos / 60);
+  const sec = segundos % 60;
+  return `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
 
 function obterTreinos() {
@@ -133,6 +150,7 @@ function criarCardTreino(treino, indice) {
   const acoesTreino = document.createElement("div");
   const botaoEditarFicha = document.createElement("button");
   const botaoOrganizar = document.createElement("button");
+  const botaoIniciarTreino = document.createElement("button");
 
   const exercicios = Array.isArray(treino.exercicios) ? treino.exercicios : [];
   const totalExercicios = exercicios.length;
@@ -272,34 +290,31 @@ function criarCardTreino(treino, indice) {
   botaoAdicionar.className = "botao-adicionar-exercicio";
   botaoAdicionar.type = "button";
   botaoAdicionar.textContent = "+ Adicionar exercício";
-  botaoAdicionar.addEventListener("click", () =>
-    abrirModalAdicionarExercicio(treino.id),
-  );
+  botaoAdicionar.addEventListener("click", () => abrirModalAdicionarExercicio(treino.id));
 
   acoesTreino.className = "acoes-treino";
 
   botaoEditarFicha.className = "botao-acao-treino";
   botaoEditarFicha.type = "button";
   botaoEditarFicha.textContent = "Editar dados";
-  botaoEditarFicha.addEventListener("click", () =>
-    abrirModalEditarTreino(treino.id),
-  );
+  botaoEditarFicha.addEventListener("click", () => abrirModalEditarTreino(treino.id));
 
   botaoOrganizar.className = "botao-acao-treino destaque";
   botaoOrganizar.type = "button";
-  botaoOrganizar.textContent =
-    idTreinoEmModoEdicao === treino.id ? "Pronto" : "Organizar";
-  botaoOrganizar.addEventListener("click", () =>
-    alternarModoEdicaoTreino(treino.id),
-  );
+  botaoOrganizar.textContent = idTreinoEmModoEdicao === treino.id ? "Pronto" : "Organizar";
+  botaoOrganizar.addEventListener("click", () => alternarModoEdicaoTreino(treino.id));
+
+  botaoIniciarTreino.className = "botao-iniciar-treino";
+  botaoIniciarTreino.type = "button";
+  botaoIniciarTreino.innerHTML = "▶ Iniciar treino";
+  botaoIniciarTreino.addEventListener("click", () => iniciarExecucaoTreino(treino.id));
 
   acoesTreino.append(botaoEditarFicha, botaoOrganizar);
-  detalhes.append(
-    tituloExercicios,
-    listaExercicios,
-    botaoAdicionar,
-    acoesTreino,
-  );
+  detalhes.append(tituloExercicios, listaExercicios, botaoAdicionar, acoesTreino);
+
+  if (totalExercicios > 0) {
+    detalhes.append(botaoIniciarTreino);
+  }
 
   if (idTreinoEmModoEdicao === treino.id) {
     detalhes.classList.add("modo-edicao");
@@ -311,15 +326,11 @@ function criarCardTreino(treino, indice) {
     vibrar(15);
     const seraAberto = botao.getAttribute("aria-expanded") === "false";
 
-    document
-      .querySelectorAll(".card-treino[aria-expanded='true']")
-      .forEach((outroBotao) => {
-        outroBotao.setAttribute("aria-expanded", "false");
-        outroBotao.classList.remove("esta-aberto");
-        document.getElementById(
-          outroBotao.getAttribute("aria-controls"),
-        ).hidden = true;
-      });
+    document.querySelectorAll(".card-treino[aria-expanded='true']").forEach((outroBotao) => {
+      outroBotao.setAttribute("aria-expanded", "false");
+      outroBotao.classList.remove("esta-aberto");
+      document.getElementById(outroBotao.getAttribute("aria-controls")).hidden = true;
+    });
 
     botao.setAttribute("aria-expanded", String(seraAberto));
     botao.classList.toggle("esta-aberto", seraAberto);
@@ -343,9 +354,7 @@ function reordenarExerciciosLista(idTreino, deIndice, paraIndice) {
   abrirTreino(idTreino);
 }
 
-function criarEstadoVazio(
-  mensagemTexto = "Você ainda não criou nenhuma ficha. Crie seu primeiro treino para começar.",
-) {
+function criarEstadoVazio(mensagemTexto = "Você ainda não criou nenhuma ficha. Crie seu primeiro treino para começar.") {
   const item = document.createElement("li");
   const mensagem = document.createElement("p");
   item.className = "estado-vazio";
@@ -370,11 +379,7 @@ function renderizarTreinos() {
 
   if (treinosFiltrados.length === 0) {
     lista.append(
-      criarEstadoVazio(
-        termoNormalizado
-          ? "Nenhuma ficha encontrada para esta busca."
-          : undefined,
-      ),
+      criarEstadoVazio(termoNormalizado ? "Nenhuma ficha encontrada para esta busca." : undefined),
     );
   } else {
     treinosFiltrados.forEach((treino, indice) => {
@@ -400,9 +405,7 @@ function renderizarChipsSugestoes() {
     chip.addEventListener("click", () => {
       vibrar(20);
       if (gruposFichaEmEdicao.includes(grupo)) {
-        gruposFichaEmEdicao = gruposFichaEmEdicao.filter(
-          (item) => item !== grupo,
-        );
+        gruposFichaEmEdicao = gruposFichaEmEdicao.filter((item) => item !== grupo);
       } else {
         gruposFichaEmEdicao.push(grupo);
       }
@@ -448,8 +451,7 @@ function abrirModalEditarTreino(idTreino) {
 
   idTreinoSendoEditado = idTreino;
   document.querySelector("#titulo-modal").textContent = "Editar ficha";
-  formulario.querySelector("button[type='submit']").textContent =
-    "Salvar alterações";
+  formulario.querySelector("button[type='submit']").textContent = "Salvar alterações";
   document.querySelector("#nome-treino").value = treino.nome;
   gruposFichaEmEdicao = treino.gruposMusculares?.length
     ? [...treino.gruposMusculares]
@@ -503,9 +505,7 @@ function renderizarGruposFicha() {
     remover.textContent = "×";
     remover.addEventListener("click", () => {
       vibrar(15);
-      gruposFichaEmEdicao = gruposFichaEmEdicao.filter(
-        (item) => item !== grupo,
-      );
+      gruposFichaEmEdicao = gruposFichaEmEdicao.filter((item) => item !== grupo);
       renderizarChipsSugestoes();
       renderizarGruposFicha();
     });
@@ -533,9 +533,7 @@ async function excluirTreino(idTreino) {
 }
 
 function abrirTreino(idTreino) {
-  const botao = document.querySelector(
-    `.card-treino[data-treino-id="${idTreino}"]`,
-  );
+  const botao = document.querySelector(`.card-treino[data-treino-id="${idTreino}"]`);
   if (botao?.getAttribute("aria-expanded") === "false") {
     botao.click();
   }
@@ -544,47 +542,6 @@ function abrirTreino(idTreino) {
 function alternarModoEdicaoTreino(idTreino) {
   vibrar(20);
   idTreinoEmModoEdicao = idTreinoEmModoEdicao === idTreino ? null : idTreino;
-  renderizarTreinos();
-  abrirTreino(idTreino);
-}
-
-function moverExercicio(idTreino, indiceAtual, direcao) {
-  vibrar(20);
-  const treinos = obterTreinos();
-  const treino = treinos.find(({ id }) => id === idTreino);
-  const novoIndice = indiceAtual + direcao;
-
-  if (!treino || novoIndice < 0 || novoIndice >= treino.exercicios.length)
-    return;
-
-  [treino.exercicios[indiceAtual], treino.exercicios[novoIndice]] = [
-    treino.exercicios[novoIndice],
-    treino.exercicios[indiceAtual],
-  ];
-
-  salvarTreinos(treinos);
-  idTreinoEmModoEdicao = idTreino;
-  renderizarTreinos();
-  abrirTreino(idTreino);
-}
-
-async function excluirExercicioDoTreino(idTreino, idExercicio) {
-  const treinos = obterTreinos();
-  const treino = treinos.find(({ id }) => id === idTreino);
-  const exercicio = treino?.exercicios.find(({ id }) => id === idExercicio);
-  if (!exercicio) return;
-
-  const confirmou = await mostrarConfirmacao({
-    titulo: "Excluir exercício",
-    mensagem: `Excluir o exercício “${exercicio.nome}”?`,
-    textoConfirmar: "Excluir",
-  });
-
-  if (!confirmou) return;
-
-  treino.exercicios = treino.exercicios.filter(({ id }) => id !== idExercicio);
-  salvarTreinos(treinos);
-  idTreinoEmModoEdicao = idTreino;
   renderizarTreinos();
   abrirTreino(idTreino);
 }
@@ -617,12 +574,8 @@ function configurarFormularioNovoTreino() {
   const formulario = document.querySelector("#form-novo-treino");
   const seletorGrupo = document.querySelector("#grupo-ficha");
   const botaoAdicionarGrupo = document.querySelector("#adicionar-grupo-ficha");
-  const campoGrupoPersonalizado = document.querySelector(
-    "#grupo-personalizado-ficha",
-  );
-  const botaoAdicionarPersonalizado = document.querySelector(
-    "#adicionar-grupo-personalizado",
-  );
+  const campoGrupoPersonalizado = document.querySelector("#grupo-personalizado-ficha");
+  const botaoAdicionarPersonalizado = document.querySelector("#adicionar-grupo-personalizado");
   const botaoExcluirFicha = document.querySelector("#excluir-ficha-modal");
 
   botaoCriar?.addEventListener("click", abrirModalNovoTreino);
@@ -719,9 +672,7 @@ function preencherGrupos() {
 
   if (!Array.isArray(window.ESTRUTURA_MUSCULAR)) return;
 
-  const regiao = window.ESTRUTURA_MUSCULAR.find(
-    ({ id }) => id === filtroRegiao.value,
-  );
+  const regiao = window.ESTRUTURA_MUSCULAR.find(({ id }) => id === filtroRegiao.value);
   filtroGrupo.replaceChildren(criarOpcao("", "Todos os grupos"));
   filtroFoco.replaceChildren(criarOpcao("", "Todos os focos"));
   filtroGrupo.disabled = !regiao;
@@ -739,9 +690,7 @@ function preencherFocos() {
 
   if (!Array.isArray(window.ESTRUTURA_MUSCULAR)) return;
 
-  const regiao = window.ESTRUTURA_MUSCULAR.find(
-    ({ id }) => id === filtroRegiao.value,
-  );
+  const regiao = window.ESTRUTURA_MUSCULAR.find(({ id }) => id === filtroRegiao.value);
   const grupo = regiao?.grupos.find(({ id }) => id === filtroGrupo.value);
 
   filtroFoco.replaceChildren(criarOpcao("", "Todos os focos"));
@@ -756,10 +705,7 @@ function obterExerciciosFiltrados() {
   const regiao = document.querySelector("#filtro-regiao").value;
   const grupo = document.querySelector("#filtro-grupo").value;
   const foco = document.querySelector("#filtro-foco").value;
-  const busca = document
-    .querySelector("#buscar-exercicio")
-    .value.trim()
-    .toLocaleLowerCase("pt-BR");
+  const busca = document.querySelector("#buscar-exercicio").value.trim().toLocaleLowerCase("pt-BR");
 
   if (!Array.isArray(window.CATALOGO_EXERCICIOS)) return [];
 
@@ -775,8 +721,7 @@ function obterExerciciosFiltrados() {
 function selecionarExercicio(exercicio) {
   vibrar(20);
   exercicioSelecionado = exercicio;
-  document.querySelector("#exercicio-selecionado").textContent =
-    `Selecionado: ${exercicio.nome}`;
+  document.querySelector("#exercicio-selecionado").textContent = `Selecionado: ${exercicio.nome}`;
   document.querySelector("#configuracao-exercicio").hidden = false;
   document.querySelector("#salvar-exercicio").disabled = false;
   renderizarOpcoesExercicios();
@@ -790,8 +735,7 @@ function renderizarOpcoesExercicios() {
   if (exercicios.length === 0) {
     const mensagem = document.createElement("p");
     mensagem.className = "sem-resultados";
-    mensagem.textContent =
-      "Nenhum exercício encontrado. Você pode criar um personalizado abaixo.";
+    mensagem.textContent = "Nenhum exercício encontrado. Você pode criar um personalizado abaixo.";
     lista.append(mensagem);
     return;
   }
@@ -803,10 +747,7 @@ function renderizarOpcoesExercicios() {
 
     botao.type = "button";
     botao.className = "opcao-exercicio";
-    botao.classList.toggle(
-      "esta-selecionado",
-      exercicioSelecionado?.id === exercicio.id,
-    );
+    botao.classList.toggle("esta-selecionado", exercicioSelecionado?.id === exercicio.id);
     nome.textContent = exercicio.nome;
     classificacao.textContent = exercicio.foco;
 
@@ -847,8 +788,7 @@ function abrirModalEditarExercicio(idTreino, idExercicio) {
 
   if (exercicio.personalizado) {
     document.querySelector("#campo-exercicio-personalizado").hidden = false;
-    document.querySelector("#nome-exercicio-personalizado").value =
-      exercicio.nome;
+    document.querySelector("#nome-exercicio-personalizado").value = exercicio.nome;
     exercicioSelecionado = {
       id: "personalizado",
       nome: exercicio.nome,
@@ -869,8 +809,7 @@ function abrirModalEditarExercicio(idTreino, idExercicio) {
   document.querySelector("#series-exercicio").value = exercicio.series;
   document.querySelector("#repeticoes-exercicio").value = exercicio.repeticoes;
   document.querySelector("#carga-exercicio").value = exercicio.carga ?? "";
-  document.querySelector("#descanso-exercicio").value =
-    exercicio.descanso ?? 60;
+  document.querySelector("#descanso-exercicio").value = exercicio.descanso ?? 60;
   selecionarExercicio(exercicioSelecionado);
 }
 
@@ -885,15 +824,9 @@ function configurarModalExercicio() {
   const filtroGrupo = document.querySelector("#filtro-grupo");
   const filtroFoco = document.querySelector("#filtro-foco");
   const busca = document.querySelector("#buscar-exercicio");
-  const botaoPersonalizado = document.querySelector(
-    "#usar-exercicio-personalizado",
-  );
-  const campoPersonalizado = document.querySelector(
-    "#campo-exercicio-personalizado",
-  );
-  const nomePersonalizado = document.querySelector(
-    "#nome-exercicio-personalizado",
-  );
+  const botaoPersonalizado = document.querySelector("#usar-exercicio-personalizado");
+  const campoPersonalizado = document.querySelector("#campo-exercicio-personalizado");
+  const nomePersonalizado = document.querySelector("#nome-exercicio-personalizado");
   const cancelar = document.querySelector("#cancelar-exercicio");
   const formulario = document.querySelector("#form-adicionar-exercicio");
 
@@ -947,19 +880,13 @@ function configurarModalExercicio() {
     if (!treino) return;
 
     const series = Number(document.querySelector("#series-exercicio").value);
-    const repeticoes = Number(
-      document.querySelector("#repeticoes-exercicio").value,
-    );
+    const repeticoes = Number(document.querySelector("#repeticoes-exercicio").value);
     const carga = document.querySelector("#carga-exercicio").value;
-    const descanso = Number(
-      document.querySelector("#descanso-exercicio").value,
-    );
+    const descanso = Number(document.querySelector("#descanso-exercicio").value);
 
     const dadosExercicio = {
       nome: exercicioSelecionado.nome,
-      catalogoId: exercicioSelecionado.personalizado
-        ? null
-        : exercicioSelecionado.id,
+      catalogoId: exercicioSelecionado.personalizado ? null : exercicioSelecionado.id,
       personalizado: Boolean(exercicioSelecionado.personalizado),
       regiao: exercicioSelecionado.regiao || null,
       grupo: exercicioSelecionado.grupo || null,
@@ -971,23 +898,267 @@ function configurarModalExercicio() {
     };
 
     if (idExercicioSendoEditado) {
-      const exercicio = treino.exercicios.find(
-        ({ id }) => id === idExercicioSendoEditado,
-      );
+      const exercicio = treino.exercicios.find(({ id }) => id === idExercicioSendoEditado);
       Object.assign(exercicio, dadosExercicio);
     } else {
       treino.exercicios.push({ id: gerarIdTreino(), ...dadosExercicio });
     }
 
-    const treinos = obterTreinos().map((item) =>
-      item.id === treino.id ? treino : item,
-    );
+    const treinos = obterTreinos().map((item) => (item.id === treino.id ? treino : item));
     salvarTreinos(treinos);
     fecharModalAdicionarExercicio();
     renderizarTreinos();
     abrirTreino(treino.id);
   });
 }
+
+async function excluirExercicioDoTreino(idTreino, idExercicio) {
+  const treinos = obterTreinos();
+  const treino = treinos.find(({ id }) => id === idTreino);
+  const exercicio = treino?.exercicios.find(({ id }) => id === idExercicio);
+  if (!exercicio) return;
+
+  const confirmou = await mostrarConfirmacao({
+    titulo: "Excluir exercício",
+    mensagem: `Excluir o exercício “${exercicio.nome}”?`,
+    textoConfirmar: "Excluir",
+  });
+
+  if (!confirmou) return;
+
+  treino.exercicios = treino.exercicios.filter(({ id }) => id !== idExercicio);
+  salvarTreinos(treinos);
+  idTreinoEmModoEdicao = idTreino;
+  renderizarTreinos();
+  abrirTreino(idTreino);
+}
+
+// =========================================================
+// MODO DE EXECUÇÃO EM TEMPO REAL
+// =========================================================
+
+function iniciarExecucaoTreino(idTreino) {
+  vibrar(30);
+  const treino = obterTreinos().find(({ id }) => id === idTreino);
+  if (!treino || !treino.exercicios || treino.exercicios.length === 0) return;
+
+  sessaoAtiva = {
+    idTreino: treino.id,
+    nome: treino.nome,
+    inicio: Date.now(),
+    segundosDecorridos: 0,
+    exercicios: treino.exercicios.map((ex) => ({
+      id: ex.id,
+      nome: ex.nome,
+      descanso: ex.descanso || 60,
+      series: Array.from({ length: ex.series || 3 }, (_, i) => ({
+        numero: i + 1,
+        reps: ex.repeticoes || 10,
+        carga: ex.carga !== null && ex.carga !== undefined ? ex.carga : 0,
+        concluida: false,
+      })),
+    })),
+  };
+
+  document.querySelector("#nome-treino-ativo").textContent = sessaoAtiva.nome;
+  document.querySelector("#tela-execucao").hidden = false;
+  document.querySelector("#app-principal").hidden = true;
+
+  iniciarCronometroDecorrido();
+  renderizarExerciciosExecucao();
+}
+
+function iniciarCronometroDecorrido() {
+  clearInterval(timerDecorridoInterval);
+  const elementoTempo = document.querySelector("#tempo-decorrido");
+
+  timerDecorridoInterval = setInterval(() => {
+    sessaoAtiva.segundosDecorridos++;
+    elementoTempo.textContent = `⏱ ${formatarTempo(sessaoAtiva.segundosDecorridos)}`;
+  }, 1000);
+}
+
+function renderizarExerciciosExecucao() {
+  const lista = document.querySelector("#lista-exercicios-execucao");
+  if (!lista || !sessaoAtiva) return;
+  lista.replaceChildren();
+
+  sessaoAtiva.exercicios.forEach((ex, indexEx) => {
+    const card = document.createElement("li");
+    card.className = "card-exercicio-execucao";
+
+    const cabecalho = document.createElement("div");
+    cabecalho.className = "cabecalho-ex-exec";
+    cabecalho.innerHTML = `<strong>${ex.nome}</strong> <span>${ex.descanso}s descanso</span>`;
+
+    const tabela = document.createElement("div");
+    tabela.className = "tabela-series";
+
+    const cabecalhoTabela = document.createElement("div");
+    cabecalhoTabela.className = "linha-cabecalho-serie";
+    cabecalhoTabela.innerHTML = `<span>SET</span><span>KG</span><span>REPS</span><span>STATUS</span>`;
+    tabela.append(cabecalhoTabela);
+
+    ex.series.forEach((serie, indexSerie) => {
+      const linha = document.createElement("div");
+      linha.className = `linha-serie-exec ${serie.concluida ? "feita" : ""}`;
+
+      linha.innerHTML = `
+        <span class="num-serie">${serie.numero}</span>
+        <input type="number" inputmode="decimal" class="input-serie-carga" value="${serie.carga}" step="0.5" />
+        <input type="number" inputmode="numeric" class="input-serie-reps" value="${serie.reps}" />
+        <button type="button" class="btn-check-serie ${serie.concluida ? "ativo" : ""}">✓</button>
+      `;
+
+      const inputCarga = linha.querySelector(".input-serie-carga");
+      const inputReps = linha.querySelector(".input-serie-reps");
+      const btnCheck = linha.querySelector(".btn-check-serie");
+
+      inputCarga.addEventListener("change", () => {
+        serie.carga = Number(inputCarga.value) || 0;
+      });
+
+      inputReps.addEventListener("change", () => {
+        serie.reps = Number(inputReps.value) || 0;
+      });
+
+      btnCheck.addEventListener("click", () => {
+        vibrar(25);
+        serie.concluida = !serie.concluida;
+        linha.classList.toggle("feita", serie.concluida);
+        btnCheck.classList.toggle("ativo", serie.concluida);
+
+        if (serie.concluida) {
+          dispararTimerDescanso(ex.descanso);
+        }
+      });
+
+      tabela.append(linha);
+    });
+
+    card.append(cabecalho, tabela);
+    lista.append(card);
+  });
+}
+
+function dispararTimerDescanso(segundos) {
+  clearInterval(timerDescansoInterval);
+  tempoDescansoRestante = segundos;
+
+  const cardTimer = document.querySelector("#card-timer-descanso");
+  const display = document.querySelector("#display-tempo-descanso");
+  cardTimer.hidden = false;
+  display.textContent = formatarTempo(tempoDescansoRestante);
+
+  timerDescansoInterval = setInterval(() => {
+    tempoDescansoRestante--;
+
+    if (tempoDescansoRestante <= 0) {
+      clearInterval(timerDescansoInterval);
+      cardTimer.hidden = true;
+      vibrar([100, 50, 100]);
+      emitirBeep();
+      return;
+    }
+
+    display.textContent = formatarTempo(tempoDescansoRestante);
+  }, 1000);
+}
+
+function configurarControlesTimer() {
+  const cardTimer = document.querySelector("#card-timer-descanso");
+  const display = document.querySelector("#display-tempo-descanso");
+  const btnPular = document.querySelector("#btn-pular-timer");
+
+  document.querySelectorAll(".btn-timer-mod").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      vibrar(15);
+      const ajuste = Number(btn.dataset.ajuste);
+      tempoDescansoRestante = Math.max(0, tempoDescansoRestante + ajuste);
+      display.textContent = formatarTempo(tempoDescansoRestante);
+    });
+  });
+
+  btnPular?.addEventListener("click", () => {
+    vibrar(15);
+    clearInterval(timerDescansoInterval);
+    cardTimer.hidden = true;
+  });
+}
+
+async function finalizarTreinoExecucao() {
+  vibrar(30);
+  clearInterval(timerDecorridoInterval);
+  clearInterval(timerDescansoInterval);
+  document.querySelector("#card-timer-descanso").hidden = true;
+
+  let totalSeries = 0;
+  let seriesFeitas = 0;
+  let volumeTotal = 0;
+
+  sessaoAtiva.exercicios.forEach((ex) => {
+    ex.series.forEach((s) => {
+      totalSeries++;
+      if (s.concluida) {
+        seriesFeitas++;
+        volumeTotal += s.carga * s.reps;
+      }
+    });
+  });
+
+  document.querySelector("#resumo-tempo").textContent = formatarTempo(sessaoAtiva.segundosDecorridos);
+  document.querySelector("#resumo-series").textContent = `${seriesFeitas} / ${totalSeries}`;
+  document.querySelector("#resumo-volume").textContent = `${volumeTotal.toLocaleString("pt-BR")} kg`;
+
+  const modalResumo = document.querySelector("#modal-resumo-treino");
+  modalResumo.showModal();
+}
+
+function sairDaTelaExecucao() {
+  clearInterval(timerDecorridoInterval);
+  clearInterval(timerDescansoInterval);
+
+  const cardTimer = document.querySelector("#card-timer-descanso");
+  const telaExecucao = document.querySelector("#tela-execucao");
+  const appPrincipal = document.querySelector("#app-principal");
+
+  if (cardTimer) cardTimer.hidden = true;
+  if (telaExecucao) telaExecucao.hidden = true;
+  if (appPrincipal) appPrincipal.hidden = false;
+
+  sessaoAtiva = null;
+}
+
+function fecharResumoETerminar() {
+  const modalResumo = document.querySelector("#modal-resumo-treino");
+  if (modalResumo) modalResumo.close();
+  sairDaTelaExecucao();
+  mostrarAviso("Treino finalizado com sucesso! Parabéns pelo treino.");
+}
+
+async function cancelarTreinoExecucao() {
+  const confirmou = await mostrarConfirmacao({
+    titulo: "Cancelar treino",
+    mensagem: "Deseja encerrar este treino sem salvar o progresso?",
+    textoConfirmar: "Sim, cancelar",
+  });
+
+  if (!confirmou) return;
+
+  sairDaTelaExecucao();
+  mostrarAviso("Treino cancelado.");
+}
+
+function configurarEventosExecucao() {
+  document.querySelector("#concluir-treino-ativo")?.addEventListener("click", finalizarTreinoExecucao);
+  document.querySelector("#cancelar-treino-ativo")?.addEventListener("click", cancelarTreinoExecucao);
+  document.querySelector("#fechar-resumo-treino")?.addEventListener("click", fecharResumoETerminar);
+  configurarControlesTimer();
+}
+
+// =========================================================
+// BACKUP E CONFIGURAÇÃO
+// =========================================================
 
 function baixarArquivo(nome, conteudo, tipo) {
   const arquivo = new Blob([conteudo], { type: tipo });
@@ -1008,11 +1179,7 @@ function exportarBackup() {
     treinos: obterTreinos(),
   };
 
-  baixarArquivo(
-    "gymflow-backup.json",
-    JSON.stringify(backup, null, 2),
-    "application/json",
-  );
+  baixarArquivo("gymflow-backup.json", JSON.stringify(backup, null, 2), "application/json");
   mostrarAviso("Backup exportado com sucesso.");
 }
 
@@ -1023,10 +1190,7 @@ async function importarBackup(arquivo) {
     const dados = JSON.parse(await arquivo.text());
     const treinosImportados = Array.isArray(dados) ? dados : dados.treinos;
 
-    if (
-      !Array.isArray(treinosImportados) ||
-      !treinosImportados.every((t) => t && typeof t.nome === "string")
-    ) {
+    if (!Array.isArray(treinosImportados) || !treinosImportados.every((t) => t && typeof t.nome === "string")) {
       throw new Error("Formato inválido");
     }
 
@@ -1042,9 +1206,7 @@ async function importarBackup(arquivo) {
       ...treino,
       id: treino.id || gerarIdTreino(),
       exercicios: Array.isArray(treino.exercicios) ? treino.exercicios : [],
-      gruposMusculares: Array.isArray(treino.gruposMusculares)
-        ? treino.gruposMusculares
-        : [],
+      gruposMusculares: Array.isArray(treino.gruposMusculares) ? treino.gruposMusculares : [],
     }));
 
     salvarTreinos(treinosNormalizados);
@@ -1082,6 +1244,7 @@ document.addEventListener("DOMContentLoaded", () => {
   configurarModalExercicio();
   configurarControlesPassoRapido();
   configurarBuscaEBackups();
+  configurarEventosExecucao();
 });
 
 window.GymFlow = {

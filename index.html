@@ -8,64 +8,152 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <header class="topo">
-      <div>
-        <p class="saudacao">Bem-vindo de volta</p>
-        <h1>Suas fichas</h1>
-      </div>
-      <button
-        id="botao-perfil"
-        class="botao-perfil"
-        type="button"
-        aria-label="Abrir perfil"
-      >
-        👤
-      </button>
-    </header>
+    <!-- TELA PRINCIPAL -->
+    <div id="app-principal">
+      <header class="topo">
+        <div>
+          <p class="saudacao">Bem-vindo de volta</p>
+          <h1>Suas fichas</h1>
+        </div>
+        <button
+          id="botao-perfil"
+          class="botao-perfil"
+          type="button"
+          aria-label="Abrir perfil"
+        >
+          👤
+        </button>
+      </header>
 
-    <main>
-      <search class="busca">
-        <label class="sr-only" for="buscar-treino">Buscar treino</label>
-        <div class="campo-busca-container">
+      <main>
+        <search class="busca">
+          <label class="sr-only" for="buscar-treino">Buscar treino</label>
+          <div class="campo-busca-container">
+            <input
+              id="buscar-treino"
+              type="search"
+              placeholder="Buscar treino"
+              autocomplete="off"
+            />
+          </div>
+        </search>
+
+        <section class="treinos" aria-labelledby="titulo-treinos">
+          <header class="cabecalho-secao">
+            <h2 id="titulo-treinos">Meus treinos</h2>
+            <span id="quantidade-fichas">Nenhuma ficha</span>
+          </header>
+
+          <ul class="lista-treinos" id="lista-treinos"></ul>
+        </section>
+      </main>
+
+      <footer class="acoes">
+        <div class="acoes-secundarias">
+          <button id="importar-backup" class="botao-secundario" type="button">
+            Importar backup
+          </button>
+          <button id="exportar-backup" class="botao-secundario" type="button">
+            Exportar backup
+          </button>
           <input
-            id="buscar-treino"
-            type="search"
-            placeholder="Buscar treino"
-            autocomplete="off"
+            id="arquivo-backup"
+            type="file"
+            accept="application/json,.json"
+            hidden
           />
         </div>
-      </search>
-
-      <section class="treinos" aria-labelledby="titulo-treinos">
-        <header class="cabecalho-secao">
-          <h2 id="titulo-treinos">Meus treinos</h2>
-          <span id="quantidade-fichas">Nenhuma ficha</span>
-        </header>
-
-        <ul class="lista-treinos" id="lista-treinos"></ul>
-      </section>
-    </main>
-
-    <footer class="acoes">
-      <div class="acoes-secundarias">
-        <button id="importar-backup" class="botao-secundario" type="button">
-          Importar backup
+        <button id="criar-treino" class="botao-primario" type="button">
+          + Criar novo treino
         </button>
-        <button id="exportar-backup" class="botao-secundario" type="button">
-          Exportar backup
+      </footer>
+    </div>
+
+    <!-- TELA DE EXECUÇÃO DE TREINO -->
+    <section id="tela-execucao" class="tela-execucao" hidden>
+      <header class="topo-execucao">
+        <button
+          id="cancelar-treino-ativo"
+          class="botao-fechar"
+          type="button"
+          aria-label="Cancelar treino"
+        >
+          ×
         </button>
-        <input
-          id="arquivo-backup"
-          type="file"
-          accept="application/json,.json"
-          hidden
-        />
+        <div class="info-execucao-topo">
+          <h2 id="nome-treino-ativo">Treino A</h2>
+          <span id="tempo-decorrido" class="tempo-decorrido">⏱ 00:00</span>
+        </div>
+        <button
+          id="concluir-treino-ativo"
+          class="btn-concluir-treino"
+          type="button"
+        >
+          Concluir
+        </button>
+      </header>
+
+      <div class="conteudo-execucao">
+        <ul
+          id="lista-exercicios-execucao"
+          class="lista-exercicios-execucao"
+        ></ul>
       </div>
-      <button id="criar-treino" class="botao-primario" type="button">
-        + Criar novo treino
-      </button>
-    </footer>
 
+      <!-- TIMER DE DESCANSO FLUTUANTE -->
+      <div id="card-timer-descanso" class="card-timer-descanso" hidden>
+        <div class="info-timer">
+          <span class="label-timer">Descanso</span>
+          <strong id="display-tempo-descanso" class="display-tempo-descanso"
+            >00:45</strong
+          >
+        </div>
+        <div class="acoes-timer">
+          <button type="button" class="btn-timer-mod" data-ajuste="-15">
+            -15s
+          </button>
+          <button type="button" class="btn-timer-mod" data-ajuste="15">
+            +15s
+          </button>
+          <button type="button" id="btn-pular-timer" class="btn-timer-pular">
+            Pular
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODAL RESUMO DO TREINO -->
+    <dialog id="modal-resumo-treino" class="modal-treino">
+      <div class="form-treino">
+        <div class="cabecalho-modal">
+          <div>
+            <p class="saudacao">Treino finalizado!</p>
+            <h2>Resumo da Sessão</h2>
+          </div>
+        </div>
+
+        <div class="resumo-stats">
+          <div class="stat-card">
+            <span class="stat-titulo">Tempo Total</span>
+            <strong id="resumo-tempo" class="stat-valor">00:00</strong>
+          </div>
+          <div class="stat-card">
+            <span class="stat-titulo">Séries Feitas</span>
+            <strong id="resumo-series" class="stat-valor">0 / 0</strong>
+          </div>
+          <div class="stat-card">
+            <span class="stat-titulo">Volume Total</span>
+            <strong id="resumo-volume" class="stat-valor">0 kg</strong>
+          </div>
+        </div>
+
+        <button id="fechar-resumo-treino" class="botao-primario" type="button">
+          Fechar e Salvar
+        </button>
+      </div>
+    </dialog>
+
+    <!-- MODAL DE CONFIRMAÇÃO -->
     <dialog id="modal-confirmacao" class="modal-confirmacao">
       <form method="dialog" class="form-confirmacao">
         <div class="cabecalho-modal">
@@ -101,6 +189,7 @@
       </form>
     </dialog>
 
+    <!-- MODAL NOVO/EDITAR TREINO -->
     <dialog
       id="modal-novo-treino"
       class="modal-treino"
@@ -202,6 +291,7 @@
       hidden
     ></div>
 
+    <!-- MODAL ADICIONAR/EDITAR EXERCÍCIO -->
     <dialog
       id="modal-adicionar-exercicio"
       class="modal-treino"
