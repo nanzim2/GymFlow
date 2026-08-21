@@ -997,3 +997,23 @@ dialog:not([open]) {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
 }
+
+.corpo-em-breve {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.icone-em-breve {
+  font-size: 2.8rem;
+  line-height: 1;
+}
+
+.corpo-em-breve p {
+  color: var(--texto-secundario);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}

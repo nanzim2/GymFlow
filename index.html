@@ -4,7 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Crie e organize suas fichas de treino." />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
     <link rel="manifest" href="manifest.json" />
     <title>GymFlow — Minhas fichas</title>
     <link rel="stylesheet" href="style.css" />
@@ -14,21 +17,27 @@
     <div id="app-principal">
       <header class="topo">
         <div class="logo-area">
-          <img 
-            class="logo-app" 
-            src="./assets/logo.svg" 
-            alt="Logo GymFlow"
-          />
+          <img class="logo-app" src="./assets/logo.svg" alt="Logo GymFlow" />
           <div>
             <p class="saudacao">GymFlow</p>
             <h1>Suas fichas</h1>
           </div>
         </div>
         <div class="topo-botoes">
-          <button id="botao-historico" class="botao-perfil" type="button" aria-label="Abrir histórico de treinos">
+          <button
+            id="botao-historico"
+            class="botao-perfil"
+            type="button"
+            aria-label="Abrir histórico de treinos"
+          >
             📊
           </button>
-          <button id="botao-perfil" class="botao-perfil" type="button" aria-label="Abrir perfil">
+          <button
+            id="botao-perfil"
+            class="botao-perfil"
+            type="button"
+            aria-label="Abrir perfil"
+          >
             👤
           </button>
         </div>
@@ -555,24 +564,29 @@
     </dialog>
 
     <dialog id="modal-em-breve" class="modal-em-breve">
-      <div class="conteudo-em-breve">
-        <button
-          id="fechar-em-breve"
-          class="botao-fechar"
-          type="button"
-          aria-label="Fechar"
-        >
-          ×
-        </button>
+      <div class="form-treino">
+        <div class="cabecalho-modal">
+          <div>
+            <p class="saudacao">Perfil</p>
+            <h2>Em breve</h2>
+          </div>
+          <button
+            id="fechar-em-breve"
+            class="botao-fechar"
+            type="button"
+            aria-label="Fechar"
+          >
+            ×
+          </button>
+        </div>
 
-        <div class="icone-em-breve">🚧</div>
-
-        <h2>Em breve</h2>
-
-        <p>
-          O perfil do usuário está sendo preparado. Em breve você poderá
-          gerenciar preferências e metas por aqui.
-        </p>
+        <div class="corpo-em-breve">
+          <div class="icone-em-breve">🚧</div>
+          <p>
+            O perfil do usuário está sendo preparado. Em breve você poderá
+            gerenciar preferências e metas por aqui.
+          </p>
+        </div>
 
         <button id="entendi-em-breve" class="botao-primario" type="button">
           Entendi
