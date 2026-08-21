@@ -141,8 +141,14 @@ function mostrarConfirmacao({
 
     const finalizar = (resultado) => {
       vibrar(20);
-      modal.close();
+      modal.oncancel = null;
+      if (modal.open) modal.close();
       resolve(resultado);
+    };
+
+    modal.oncancel = (e) => {
+      e.preventDefault();
+      finalizar(false);
     };
 
     botaoConfirmar.onclick = () => finalizar(true);
@@ -697,11 +703,24 @@ function configurarFormularioNovoTreino() {
     campoGrupoPersonalizado.value = "";
   });
 
-  botaoExcluirFicha?.addEventListener("click", () => {
+  botaoExcluirFicha?.addEventListener("click", async () => {
     if (!idTreinoSendoEditado) return;
     const idTreino = idTreinoSendoEditado;
-    fecharModalNovoTreino();
-    excluirTreino(idTreino);
+    const treino = obterTreinos().find(({ id }) => id === idTreino);
+    if (!treino) return;
+
+    const confirmou = await mostrarConfirmacao({
+      titulo: "Excluir ficha",
+      mensagem: `Excluir a ficha “${treino.nome}”? Esta ação não pode ser desfeita.`,
+      textoConfirmar: "Excluir",
+    });
+
+    if (confirmou) {
+      fecharModalNovoTreino();
+      salvarTreinos(obterTreinos().filter(({ id }) => id !== idTreino));
+      renderizarTreinos();
+      mostrarAviso("Ficha excluída com sucesso.");
+    }
   });
 
   formulario?.addEventListener("submit", (evento) => {
@@ -1335,7 +1354,15 @@ function renderizarHistorico() {
     const item = document.createElement("li");
     item.className = "item-historico";
 
-    const dataFormatada = new Date(reg.data).toLocaleDateString("pt-BR", {
+    const cabecalho = document.createElement("div");
+    cabecalho.className = "cabecalho-historico";
+
+    const nomeTreino = document.createElement("strong");
+    nomeTreino.textContent = reg.nomeTreino || "Treino sem nome";
+
+    const dataTreino = document.createElement("span");
+    dataTreino.className = "data-historico";
+    dataTreino.textContent = new Date(reg.data).toLocaleDateString("pt-BR", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -1343,21 +1370,21 @@ function renderizarHistorico() {
       minute: "2-digit",
     });
 
-    const listaExs = reg.exercicios
-      .map((e) => `${e.nome} (${e.cargaMax}kg)`)
-      .join(" · ");
+    cabecalho.append(nomeTreino, dataTreino);
 
-    item.innerHTML = `
-      <div class="cabecalho-historico">
-        <strong>${reg.nomeTreino}</strong>
-        <span class="data-historico">${dataFormatada}</span>
-      </div>
-      <div class="metricas-historico">
-        ⏱ ${formatarTempo(reg.duracaoSegundos)} · ${reg.seriesFeitas} séries · ${reg.volumeTotal.toLocaleString("pt-BR")} kg levantados
-      </div>
-      <div class="detalhes-ex-historico">${listaExs}</div>
-    `;
+    const metricas = document.createElement("div");
+    metricas.className = "metricas-historico";
+    metricas.textContent = `⏱ ${formatarTempo(reg.duracaoSegundos)} · ${reg.seriesFeitas} séries · ${(reg.volumeTotal || 0).toLocaleString("pt-BR")} kg levantados`;
 
+    const detalhes = document.createElement("div");
+    detalhes.className = "detalhes-ex-historico";
+    detalhes.textContent = Array.isArray(reg.exercicios)
+      ? reg.exercicios
+          .map((e) => `${e.nome} (${e.cargaMax || 0}kg)`)
+          .join(" · ")
+      : "";
+
+    item.append(cabecalho, metricas, detalhes);
     lista.append(item);
   });
 }

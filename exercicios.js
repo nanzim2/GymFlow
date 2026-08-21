@@ -53,7 +53,12 @@ const ESTRUTURA_MUSCULAR = [
       {
         id: "quadriceps",
         nome: "Quadríceps",
-        focos: ["Vasto lateral", "Vasto medial", "Reto femoral"],
+        focos: [
+          "Vasto lateral",
+          "Vasto medial",
+          "Vasto intermédio",
+          "Reto femoral",
+        ],
       },
       {
         id: "posteriores",

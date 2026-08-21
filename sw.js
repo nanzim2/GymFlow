@@ -5,12 +5,13 @@ const ARQUIVOS_CACHE = [
   "./style.css",
   "./script.js",
   "./exercicios.js",
-  "./manifest.json"
+  "./manifest.json",
+  "./assets/logo.svg",
 ];
 
 self.addEventListener("install", (evento) => {
   evento.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ARQUIVOS_CACHE))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ARQUIVOS_CACHE)),
   );
   self.skipWaiting();
 });
@@ -21,15 +22,17 @@ self.addEventListener("activate", (evento) => {
       Promise.all(
         chaves.map((chave) => {
           if (chave !== CACHE_NAME) return caches.delete(chave);
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );
   self.clients.claim();
 });
 
 self.addEventListener("fetch", (evento) => {
   evento.respondWith(
-    caches.match(evento.request).then((resposta) => resposta || fetch(evento.request))
+    caches
+      .match(evento.request)
+      .then((resposta) => resposta || fetch(evento.request)),
   );
 });

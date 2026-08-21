@@ -22,7 +22,7 @@
   padding: 0;
 }
 
-[hidden] {
+[hidden]:not(dialog) {
   display: none !important;
 }
 
