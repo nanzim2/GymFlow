@@ -26,16 +26,13 @@
 
 html {
   width: 100%;
-  max-width: 100%;
+  height: 100%;
   overflow-x: hidden;
 }
 
 body {
   width: 100%;
-  max-width: 100%;
   min-height: 100dvh;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
   font-family:
     system-ui,
     -apple-system,
@@ -48,7 +45,17 @@ body {
   overflow-x: hidden;
   font-size: 16px;
   line-height: 1.4;
-  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+#app-principal {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 440px;
+  margin-inline: auto;
+  padding: 16px 16px env(safe-area-inset-bottom, 20px);
 }
 
 [hidden]:not(dialog) {
@@ -87,30 +94,21 @@ button {
 }
 
 /* =========================================
-   ESTRUTURA & CONTAINER
+   ESTRUTURA & CABEÇALHO
    ========================================= */
-
-.topo,
-main,
-.acoes {
-  width: 100%;
-  max-width: 460px;
-  margin-inline: auto;
-  padding-inline: 16px;
-}
 
 .topo {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 20px;
-  padding-bottom: 18px;
+  padding-bottom: 20px;
+  width: 100%;
 }
 
 .saudacao {
   margin-bottom: 2px;
   color: var(--verde);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -139,10 +137,15 @@ h1 {
   border-radius: 50%;
   background: var(--card);
   color: var(--verde);
-  min-height: 46px;
-  min-width: 46px;
+  min-height: 44px;
+  min-width: 44px;
   font-size: 1.2rem;
   flex-shrink: 0;
+}
+
+main {
+  flex: 1;
+  width: 100%;
 }
 
 .busca {
@@ -385,7 +388,7 @@ h1 {
 }
 
 /* =========================================
-   BOTÕES DE AÇÃO E EXCLUSÃO
+   BOTÕES DE AÇÃO E RODAPÉ
    ========================================= */
 
 .botao-adicionar-exercicio {
@@ -473,10 +476,10 @@ h1 {
 }
 
 .acoes {
+  width: 100%;
   display: grid;
   gap: 10px;
-  padding-top: 20px;
-  padding-bottom: 24px;
+  padding-top: 24px;
 }
 
 .acoes-secundarias {
@@ -508,7 +511,7 @@ h1 {
 }
 
 /* =========================================
-   MODAIS (ZERO VAZAMENTO HORIZONTAL)
+   MODAIS CENTRALIZADOS COM PRECISÃO
    ========================================= */
 
 dialog {
@@ -519,10 +522,15 @@ dialog {
 .modal-confirmacao,
 .modal-treino,
 .modal-em-breve {
-  width: min(calc(100% - 24px), 430px);
+  position: fixed;
+  inset: 0;
   margin: auto;
+  width: calc(100% - 32px);
+  max-width: 410px;
+  height: fit-content;
+  max-height: 85vh;
   border: 1px solid var(--borda) !important;
-  border-radius: 20px;
+  border-radius: 22px;
   background: var(--fundo-secundario);
   color: var(--texto);
   box-shadow: var(--sombra);
@@ -533,15 +541,15 @@ dialog {
 .modal-confirmacao::backdrop,
 .modal-treino::backdrop,
 .modal-em-breve::backdrop {
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(5px);
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(6px);
 }
 
 .form-confirmacao,
 .form-treino {
   display: grid;
   gap: 16px;
-  padding: 18px 14px;
+  padding: 18px 16px;
   width: 100%;
   max-height: 82vh;
   overflow-y: auto;
@@ -743,7 +751,7 @@ dialog {
 
 .conteudo-execucao {
   width: 100%;
-  max-width: 460px;
+  max-width: 440px;
   margin-inline: auto;
   padding: 14px 12px;
 }
@@ -863,7 +871,7 @@ dialog {
   bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
-  width: min(calc(100% - 24px), 410px);
+  width: min(calc(100% - 32px), 410px);
   background: #1a221b;
   border: 1px solid var(--verde);
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7);
@@ -953,7 +961,7 @@ dialog {
   bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
-  width: min(calc(100% - 24px), 410px);
+  width: min(calc(100% - 32px), 410px);
   padding: 12px 16px;
   border: 1px solid #58782d;
   border-radius: 14px;

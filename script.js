@@ -537,7 +537,7 @@ function abrirModalNovoTreino() {
   formulario.querySelector("button[type='submit']").textContent = "Criar ficha";
   document.querySelector("#excluir-ficha-modal").hidden = true;
   modal.showModal();
-  campoNome?.focus();
+  //campoNome?.focus(); // abre o teclado auto
 }
 
 function fecharModalNovoTreino() {
@@ -566,7 +566,7 @@ function abrirModalEditarTreino(idTreino) {
   renderizarGruposFicha();
   document.querySelector("#excluir-ficha-modal").hidden = false;
   modal.showModal();
-  document.querySelector("#nome-treino").focus();
+  //document.querySelector("#nome-treino").focus();
 }
 
 function preencherGruposFicha() {
