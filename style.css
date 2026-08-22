@@ -512,7 +512,7 @@ main {
 }
 
 /* =========================================
-   RESET TOTAL E CENTRALIZAÇÃO DE DIALOG
+   DIALOG E MODAIS
    ========================================= */
 
 dialog {
@@ -530,12 +530,12 @@ dialog:not([open]) {
 .modal-treino,
 .modal-em-breve {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: calc(100vw - 32px);
+  inset: 0;
+  margin: auto;
+  width: calc(100vw - 28px);
   max-width: 440px;
-  max-height: 85dvh;
+  height: fit-content;
+  max-height: 88dvh;
   border: 1px solid var(--borda) !important;
   border-radius: 22px;
   background: var(--fundo-secundario);
@@ -547,7 +547,7 @@ dialog:not([open]) {
 .modal-confirmacao::backdrop,
 .modal-treino::backdrop,
 .modal-em-breve::backdrop {
-  background: rgba(0, 0, 0, 0.78);
+  background: rgba(0, 0, 0, 0.82);
   backdrop-filter: blur(6px);
 }
 
@@ -558,9 +558,84 @@ dialog:not([open]) {
   gap: 16px;
   padding: 20px 16px;
   width: 100%;
-  max-height: 85dvh;
+  max-height: 88dvh;
   overflow-y: auto;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* =========================================
+   CATÁLOGO & OPÇÕES DE EXERCÍCIOS
+   ========================================= */
+
+.filtros-exercicios {
+  display: grid;
+  gap: 10px;
+}
+
+.resultados-exercicios {
+  display: grid;
+  gap: 8px;
+}
+
+.resultados-exercicios h3 {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--texto-secundario);
+  font-weight: 800;
+}
+
+.lista-opcoes-exercicios {
+  display: grid;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.opcao-exercicio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 3px;
+  padding: 12px 14px;
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  background: var(--card);
+  color: var(--texto);
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.opcao-exercicio strong {
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
+.opcao-exercicio span {
+  font-size: 0.82rem;
+  color: var(--texto-secundario);
+}
+
+.opcao-exercicio.esta-selecionado {
+  border-color: var(--verde);
+  background: #233120;
+}
+
+.opcao-exercicio.esta-selecionado strong {
+  color: var(--verde);
+}
+
+.exercicio-selecionado {
+  color: var(--verde);
+  font-weight: 800;
+  font-size: 0.95rem;
+  padding: 8px 12px;
+  background: #1c271a;
+  border-radius: 10px;
+  border: 1px solid var(--verde);
 }
 
 .cabecalho-modal {
@@ -1016,4 +1091,35 @@ dialog:not([open]) {
   color: var(--texto-secundario);
   font-size: 0.95rem;
   line-height: 1.45;
+}
+
+.resumo-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  padding: 12px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+}
+
+.stat-titulo {
+  color: var(--texto-secundario);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.stat-valor {
+  color: var(--verde);
+  font-size: 0.95rem;
+  font-weight: 800;
 }

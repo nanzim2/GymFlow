@@ -910,7 +910,7 @@ function abrirModalAdicionarExercicio(idTreino) {
   limparSelecaoExercicio();
   renderizarOpcoesExercicios();
   modal.showModal();
-  document.querySelector("#filtro-regiao").focus();
+  //document.querySelector("#filtro-regiao").focus();
 }
 
 function abrirModalEditarExercicio(idTreino, idExercicio) {
@@ -1544,6 +1544,20 @@ botaoPerfil?.addEventListener("click", () => {
 });
 fecharEmBreve?.addEventListener("click", () => modalEmBreve?.close());
 entendiEmBreve?.addEventListener("click", () => modalEmBreve?.close());
-modalEmBreve?.addEventListener("click", (event) => {
-  if (event.target === modalEmBreve) modalEmBreve.close();
+
+// FECHAR QUALQUER MODAL AO CLICAR FORA (NO BACKDROP)
+document.querySelectorAll("dialog").forEach((dialogo) => {
+  dialogo.addEventListener("click", (evento) => {
+    const rect = dialogo.getBoundingClientRect();
+    const clicouFora =
+      evento.clientX < rect.left ||
+      evento.clientX > rect.right ||
+      evento.clientY < rect.top ||
+      evento.clientY > rect.bottom;
+
+    if (clicouFora) {
+      vibrar(15);
+      dialogo.close();
+    }
+  });
 });
