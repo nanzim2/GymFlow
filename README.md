@@ -9,8 +9,6 @@ Um Progressive Web App (PWA) moderno, responsivo, 100% gratuito, sem anúncios e
 [![PWA Ready](https://img.shields.io/badge/PWA-100%25_Offline-181e1a?style=for-the-badge&logo=pwa&logoColor=b7f531)](https://nanzim2.github.io/gymflow/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-384438?style=for-the-badge)](LICENSE)
 
-[🔗 Acessar Aplicação](https://nanzim2.github.io/gymflow/) · [📱 Como Instalar](#-instalação-no-smartphone-pwa) · [🛠️ Tecnologias](#-engenharia-e-tecnologias)
-
 </div>
 
 ---
@@ -19,7 +17,7 @@ Um Progressive Web App (PWA) moderno, responsivo, 100% gratuito, sem anúncios e
 
 <div align="center">
   <img src="assets\Tela Inicial GymFlow.jpg" width="24%" alt="Tela Inicial GymFlow" />
-  <img src="assets\Ficha de Treino.jpg" width="24%" alt="Ficha de Treino" />
+  <img src="assets\Ficha de treino.jpg" width="24%" alt="Ficha de Treino" />
   <img src="assets\Modo Execução.jpg" width="24%" alt="Modo Execução" />
   <img src="assets\Histórico de Sessões.jpg" width="24%" alt="Histórico de Sessões" />
 </div>
